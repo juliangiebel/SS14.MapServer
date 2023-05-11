@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.MapServer", "SS14.MapServer\SS14.MapServer.csproj", "{0704C426-5AD9-4A3B-8F53-CB7F6D186061}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.MapServer.Tests", "SS14.MapServer.Tests\SS14.MapServer.Tests.csproj", "{5C1E394E-16F3-4BF0-9F06-30ABDE9DA3B5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0704C426-5AD9-4A3B-8F53-CB7F6D186061}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0704C426-5AD9-4A3B-8F53-CB7F6D186061}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0704C426-5AD9-4A3B-8F53-CB7F6D186061}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0704C426-5AD9-4A3B-8F53-CB7F6D186061}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C1E394E-16F3-4BF0-9F06-30ABDE9DA3B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C1E394E-16F3-4BF0-9F06-30ABDE9DA3B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C1E394E-16F3-4BF0-9F06-30ABDE9DA3B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C1E394E-16F3-4BF0-9F06-30ABDE9DA3B5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
