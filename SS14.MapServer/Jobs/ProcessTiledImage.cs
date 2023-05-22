@@ -34,12 +34,22 @@ public class ProcessTiledImage : IJob
             );
 
         if (options.removeSource)
-            File.Delete(options.SourcePath);
+        {
+            try
+            {
+                File.Delete(options.SourcePath);
+            }
+            catch
+            {
+                // ignored
+            }
+        }
 
         await _dbContext.Tiles!.Where(tile => tile.MapId.Equals(options.MapId) && tile.GridId.Equals(options.GridId))
             .ExecuteDeleteAsync();
 
-        await _dbContext.Tiles!.AddRangeAsync(tiles);
+        _dbContext.Tiles!.AddRange(tiles);
+        await _dbContext.SaveChangesAsync();
     }
 
     public record ProcessingOptions(string MapId, int GridId, string SourcePath, string TargetPath, int TileSize, bool removeSource);

@@ -7,8 +7,7 @@ public class Context : DbContext
 {
     public DbSet<Map>? Maps { get; set; } = null!;
     public DbSet<Tile>? Tiles { get; set; } = null!;
-
-
+    
     public Context(DbContextOptions<Context> options) : base(options) {}
 
     protected override void OnModelCreating(ModelBuilder builder)

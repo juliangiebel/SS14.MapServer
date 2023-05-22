@@ -31,7 +31,8 @@ namespace SS14.MapServer.Controllers
             {
                 return NotFound();
             }
-            return await _context.Maps.ToListAsync();
+
+            return await _context.Maps.Include(map => map.Grids).ToListAsync();
         }
 
         // GET: api/Map/5
@@ -42,7 +43,7 @@ namespace SS14.MapServer.Controllers
             {
                 return NotFound();
             }
-            var map = await _context.Maps.FindAsync(id);
+            var map = await FindMapWithGrids(id);
 
             if (map == null)
             {
@@ -65,13 +66,18 @@ namespace SS14.MapServer.Controllers
             if (ValidateMapRequest(map, images, out var error))
                 return error;
             
-            _fileUploadService.UploadGridImages(map, images);
+            await _fileUploadService.UploadGridImages(map, images);
             
             if (!MapExists(id))
                 return await CreateMap(map);
 
             _context.Entry(map).State = EntityState.Modified;
 
+            foreach (var grid in map.Grids)
+            {
+                _context.Entry(grid).State = EntityState.Modified;
+            }
+            
             try
             {
                 await _context.SaveChangesAsync();
@@ -126,7 +132,7 @@ namespace SS14.MapServer.Controllers
             var result = await CreateMap(map);
 
             if (result.Value != null)
-                _fileUploadService.UploadGridImages(result.Value, images);
+                await _fileUploadService.UploadGridImages(result.Value, images);
                 
             return result;
         }
@@ -149,6 +155,14 @@ namespace SS14.MapServer.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        private async Task<Map?> FindMapWithGrids(string id)
+        {
+            return await _context.Maps!
+                .Include(map => map.Grids)
+                .Where(map => map.Id.Equals(id))
+                .SingleOrDefaultAsync();
         }
 
         private async Task<ActionResult<Map>> CreateMap(Map map)
