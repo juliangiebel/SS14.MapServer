@@ -1,16 +1,25 @@
 ﻿namespace SS14.MapServer;
 
-public class ApiException : Exception
+public class ApiErrorMessage
 {
-    public ApiException()
+    private const string DefaultMessage = "An error occured while handling the request";
+    
+    public string Message { get; set; }
+    public string? CausedBy { get; set; }
+    
+    public ApiErrorMessage()
     {
+        Message = DefaultMessage;
     }
 
-    public ApiException(string? message) : base(message)
+    public ApiErrorMessage(string? message)
     {
+        Message = message ?? DefaultMessage;
     }
 
-    public ApiException(string? message, Exception? innerException) : base(message, innerException)
+    public ApiErrorMessage(string? message, Exception? innerException)
     {
+        Message = message ?? DefaultMessage;
+        CausedBy = innerException?.Message;
     }
 }

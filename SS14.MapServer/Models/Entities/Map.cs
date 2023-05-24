@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using SS14.MapServer.Models.Types;
 
 namespace SS14.MapServer.Models.Entities;
+#pragma warning disable CS8618
 
 public class Map
 {

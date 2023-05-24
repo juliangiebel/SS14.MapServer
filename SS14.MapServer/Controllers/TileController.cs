@@ -18,7 +18,7 @@ public class TileController : ControllerBase
     }
     
     [AllowAnonymous]
-    [Produces("image/jpg", "image/png", "image/webp")]
+    [Produces("image/jpg", "image/png", "image/webp", "application/json")]
     [ProducesResponseType(200, Type = typeof(FileStreamResult))]
     [HttpGet("{id}/{gridId:int}/{x:int}/{y:int}/{z:int}")]
     public async Task<IActionResult> GetTile(string id, int gridId, int x, int y, int z)
@@ -36,11 +36,11 @@ public class TileController : ControllerBase
             return new NotFoundResult();
 
         if (!grid.Tiled)
-            return new BadRequestObjectResult(new ApiException($"Grid image with id {gridId} doesn't support image tiling"));
+            return new BadRequestObjectResult(new ApiErrorMessage($"Grid image with id {gridId} doesn't support image tiling"));
 
         var tile = await _context.Tiles!.FindAsync(id, gridId, x, y);
 
-        if (tile == null)
+        if (tile == null || !System.IO.File.Exists(grid.Path))
             return new NotFoundResult();
         
         var file = new FileStream(tile.Path, FileMode.Open);

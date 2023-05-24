@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Quartz;
+using Serilog;
 using SS14.MapServer;
 using SS14.MapServer.Models;
 using SS14.MapServer.Security;
@@ -55,6 +56,11 @@ builder.Services.AddAuthorization(options =>
 //Scheduler
 builder.Services.AddQuartz(q => { q.UseMicrosoftDependencyInjectionJobFactory(); });
 builder.Services.AddQuartzServer(q => { q.WaitForJobsToComplete = true; });
+
+//Logging
+builder.Host.UseSerilog((ctx, cfg) => cfg.ReadFrom.Configuration(ctx.Configuration));
+builder.Logging.AddSerilog();
+
 
 var app = builder.Build();
 

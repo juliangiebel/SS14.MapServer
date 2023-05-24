@@ -5,9 +5,10 @@ namespace SS14.MapServer.Models;
 
 public class Context : DbContext
 {
-    public DbSet<Map>? Maps { get; set; } = null!;
-    public DbSet<Tile>? Tiles { get; set; } = null!;
-    
+    public DbSet<Map>? Maps { get; set; }
+    public DbSet<Tile>? Tiles { get; set; }
+    public DbSet<ImageFile>? Images { get; set; }
+
     public Context(DbContextOptions<Context> options) : base(options) {}
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -15,6 +16,7 @@ public class Context : DbContext
         builder.Entity<Map>();
         builder.Entity<Grid>();
         builder.Entity<Tile>();
+        builder.Entity<ImageFile>();
     }
 
 }

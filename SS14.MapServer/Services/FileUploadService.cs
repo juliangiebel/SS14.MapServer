@@ -1,4 +1,6 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Web;
+using MimeTypes;
 using Quartz;
 using SS14.MapServer.Configuration;
 using SS14.MapServer.Helpers;
@@ -17,6 +19,19 @@ public sealed class FileUploadService
     {
         _schedulingService = schedulingService;
         configuration.Bind(FilePathsConfiguration.Name, _configuration);
+    }
+
+    public async Task UploadImage(ImageFile image, IFormFile file, string? path = null)
+    {
+        if (ValidateImageFile(file, out var message))
+            throw new ArgumentException(message);
+        
+        var filename = $"upload_{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+        path ??= Path.Combine(_configuration.ImagesPath, filename);
+
+        await using var stream = File.Create(path);
+        await file.CopyToAsync(stream);
+        image.InternalPath = path;
     }
     
     public async Task UploadGridImages(Map map, IList<IFormFile> images)
@@ -44,15 +59,37 @@ public sealed class FileUploadService
             }
             else
             {
-                path = await UploadImage(mapPath, gridId, image);
+                path = await UploadGridImage(mapPath, gridId, image);
             }
             
             grid.Path = path;
         }
     }
-
-    private async Task<string> UploadImage(string mapPath, int gridId, IFormFile image)
+    
+    public bool ValidateImageFile(IFormFile image, [NotNullWhen(true)] out string? message)
     {
+        var extension = Path.GetExtension(image.FileName);
+        if (!MimeTypeMap.TryGetMimeType(extension, out var mimeType))
+        {
+            message = $"Mime type not found for file extension {extension}";
+            return true;
+        }
+        
+        if (!_configuration.AllowedMimeTypes.Contains(mimeType))
+        {
+            message = $"Mime type not {mimeType} not allowed";
+            return true;
+        }
+
+        message = null;
+        return false;
+    }
+    
+    private async Task<string> UploadGridImage(string mapPath, int gridId, IFormFile image)
+    {
+        if (ValidateImageFile(image, out var message))
+            throw new ArgumentException(message);
+        
         var name = $"{gridId}{Path.GetExtension(image.FileName)}";
         var path = Path.Combine(mapPath, name);
 
@@ -63,6 +100,9 @@ public sealed class FileUploadService
 
     private async Task<string> UploadAndProcessTiledImage(string mapId, string mapPath, int gridId, IFormFile image, int tileSize)
     {
+        if (ValidateImageFile(image, out var message))
+            throw new ArgumentException(message);
+        
         var sourcePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}{Path.GetExtension(image.FileName)}");
         var targetPath = Path.Combine(mapPath, "tiles", gridId.ToString());
         

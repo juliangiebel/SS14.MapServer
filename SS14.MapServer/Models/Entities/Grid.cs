@@ -1,8 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using SS14.MapServer.Models.Types;
 using Point = SS14.MapServer.Models.Types.Point;
 
 namespace SS14.MapServer.Models.Entities;
+#pragma warning disable CS8618
 
 public class Grid
 {
@@ -16,5 +18,6 @@ public class Grid
     [Required]
     public Area Extent {get; set;}
     [Required]
+    [JsonIgnore]
     public string Path {get; set;}
 }
