@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Octokit;
 using SS14.MapServer.Helpers;
 
@@ -17,6 +18,7 @@ public class GitHubWebhookController : ControllerBase
         _configuration = configuration;
     }
 
+    [AllowAnonymous]
     public async Task Post()
     {
         if (!Request.Headers.TryGetValue(GithubEventHeader, out var eventName) || !await GithubWebhookHelper.VerifyWebhook(Request, _configuration))
