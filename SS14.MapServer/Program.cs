@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Quartz;
 using SS14.MapServer;
 using SS14.MapServer.Models;
+using SS14.MapServer.Security;
 using SS14.MapServer.Services;
 using SS14.MapServer.Services.Interfaces;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -25,8 +27,30 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c => {
     c.EnableAnnotations();
     c.SwaggerGeneratorOptions.OperationFilters.Add(new MapFormDataParameterFilter());
+    c.AddSecurityDefinition(ApiKeyHandler.Name, new OpenApiSecurityScheme
+    {
+        Description = "API key must appear in header",
+        Type = SecuritySchemeType.ApiKey,
+        Name = ApiKeyHandler.HeaderName,
+        In = ParameterLocation.Header
     });
+    
+    c.SwaggerGeneratorOptions.OperationFilters.Add(new ExcludeAnonymousSecurityFilter());
+});
 
+//Security
+builder.Services.AddAuthentication(ApiKeyHandler.Name).AddScheme<ApiKeyOptions, ApiKeyHandler>(
+    ApiKeyHandler.Name, 
+    options => builder.Configuration.Bind("Auth", options)
+    );
+
+builder.Services.AddAuthorization(options =>
+{
+    options.DefaultPolicy = new AuthorizationPolicyBuilder()
+        .AddAuthenticationSchemes(ApiKeyHandler.Name)
+        .RequireAuthenticatedUser()
+        .Build();
+});
 
 //Scheduler
 builder.Services.AddQuartz(q => { q.UseMicrosoftDependencyInjectionJobFactory(); });
@@ -43,9 +67,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
+app.MapControllers().RequireAuthorization();
 
 app.Run();
 

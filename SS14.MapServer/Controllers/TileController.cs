@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MimeTypes;
@@ -17,6 +17,7 @@ public class TileController : ControllerBase
         _context = context;
     }
     
+    [AllowAnonymous]
     [Produces("image/jpg", "image/png", "image/webp")]
     [ProducesResponseType(200, Type = typeof(FileStreamResult))]
     [HttpGet("{id}/{gridId:int}/{x:int}/{y:int}/{z:int}")]

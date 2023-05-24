@@ -5,3 +5,6 @@ Logging:
    
 ConnectionStrings:
   default: "Server=127.0.0.1;Port=5432;Database=maps;User Id=postgres;Password=postgres;"
+  
+Auth:
+  ApiKey: "debug"

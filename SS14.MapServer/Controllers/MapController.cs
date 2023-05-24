@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Web;
 using BrunoZell.ModelBinding;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SS14.MapServer.Models;
@@ -25,6 +26,7 @@ namespace SS14.MapServer.Controllers
 
         // GET: api/Map
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<Map>>> GetMaps()
         {
             if (_context.Maps == null)
@@ -34,8 +36,8 @@ namespace SS14.MapServer.Controllers
 
             return await _context.Maps.Include(map => map.Grids).ToListAsync();
         }
-
-        // GET: api/Map/5
+        
+        [AllowAnonymous]
         [HttpGet("{id}")]
         public async Task<ActionResult<Map>> GetMap(string id)
         {
