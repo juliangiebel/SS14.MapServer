@@ -4,10 +4,10 @@ public sealed class FilePathsConfiguration
 {
     public const string Name = "FilePaths";
     
-    public string GridImagesPath { get; set; } = null!;
-    public string ImagesPath { get; set; } = null!;
-    public string TilesPath { get; set; } = null!;
-    public string TemporaryFilesPath { get; set; } = null!;
+    public string GridImagesPath { get; set; } = "data/grid_images";
+    public string ImagesPath { get; set; } = "data/images";
+    public string TilesPath { get; set; } = "data/tiles";
+    public string TemporaryFilesPath { get; set; } = "data/tmp";
 
     public List<string> AllowedMimeTypes { get; set; } = new()
     {

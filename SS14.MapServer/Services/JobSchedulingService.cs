@@ -4,7 +4,7 @@ using SS14.MapServer.Services.Interfaces;
 
 namespace SS14.MapServer.Services;
 
-public class JobSchedulingService : IJobSchedulingService
+public sealed class JobSchedulingService : IJobSchedulingService
 {
     private readonly ISchedulerFactory _schedulerFactory;
 

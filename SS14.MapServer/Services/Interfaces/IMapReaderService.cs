@@ -1,6 +1,6 @@
 namespace SS14.MapServer.Services.Interfaces;
 
-public interface IMapReader
+public interface IMapReaderService
 {
     void UpdateMapsFromFS();
 

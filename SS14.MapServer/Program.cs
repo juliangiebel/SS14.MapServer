@@ -20,10 +20,15 @@ builder.Configuration.AddYamlFile("appsettings.Secret.yaml", true, true);
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddDbContext<Context>(opt => opt.UseNpgsql(builder.Configuration.GetConnectionString("default")));
-builder.Services.AddScoped<IMapReader, MapReaderService>();
+builder.Services.AddScoped<IMapReaderService, MapReaderServiceService>();
 builder.Services.AddScoped<FileUploadService>();
 builder.Services.AddScoped<ImageProcessingService>();
 builder.Services.AddScoped<IJobSchedulingService, JobSchedulingService>();
+builder.Services.AddScoped<MapUpdateService>();
+builder.Services.AddSingleton<ContainerService>();
+builder.Services.AddSingleton<LocalBuildService>();
+builder.Services.AddSingleton<GitService>();
+builder.Services.AddSingleton<StartupCheckService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c => {
     c.EnableAnnotations();
@@ -64,6 +69,17 @@ builder.Logging.AddSerilog();
 
 var app = builder.Build();
 
+//Preflight Checks
+Log.Information("Running preflight checks...");
+var checkResult = await app.Services.GetService<StartupCheckService>()?.RunStartupCheck()!;
+if (!checkResult)
+{
+    Log.Fatal("Some preflight checks didn't pass. Shutting down...");
+    await app.DisposeAsync();
+    return -1;
+}
+Log.Information("Preflight checks passed");
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -79,6 +95,7 @@ app.UseAuthorization();
 app.MapControllers().RequireAuthorization();
 
 app.Run();
+return 0;
 
 namespace SS14.MapServer
 {

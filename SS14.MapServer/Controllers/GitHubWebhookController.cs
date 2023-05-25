@@ -18,6 +18,7 @@ public class GitHubWebhookController : ControllerBase
         _configuration = configuration;
     }
 
+    [HttpPost]
     [AllowAnonymous]
     public async Task Post()
     {
