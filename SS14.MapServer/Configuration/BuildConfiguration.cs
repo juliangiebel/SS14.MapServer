@@ -6,6 +6,9 @@ public sealed class BuildConfiguration
     
     public bool Enabled { get; set; } = true;
     public BuildRunnerName Runner { get; set; } = BuildRunnerName.Local;
+    public string RelativeOutputPath { get; set; } = "bin";
+    public string MapRendererProjectName { get; set; } = "Content.MapRenderer";
+    public string MapRendererCommand { get; set; } = "Content.MapRenderer.exe";
 }
 
 public enum BuildRunnerName

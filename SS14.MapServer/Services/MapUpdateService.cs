@@ -25,10 +25,13 @@ public sealed class MapUpdateService
         configuration.Bind(BuildConfiguration.Name, _buildConfiguration);
     }
 
-    public async Task UpdateMapsFromGit()
+    public async Task UpdateMapsFromGit(List<string> maps)
     {
         var workingDirectory = await _gitService.Sync();
-        var mapRendererCommand = new[]{""};
+        var mapRendererCommand = new List<string>
+        {
+            "maprenderer"
+        };
         
         var path = _buildConfiguration.Runner switch
         {
@@ -37,5 +40,10 @@ public sealed class MapUpdateService
             _ => throw new ArgumentOutOfRangeException()
         };
         
+    }
+
+    public async Task<List<string>> GetChangedMaps()
+    {
+        return new List<string>();
     }
 }

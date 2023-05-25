@@ -30,7 +30,7 @@ public class ImageProcessingServiceTests
     }
 
     [Test]
-    public async Task Test1()
+    public async Task ImageTilingTest()
     {
         var tiles = await _processingService!.TileImage("test", 0, _sourcePath!, _targetPath!, 512);
         
