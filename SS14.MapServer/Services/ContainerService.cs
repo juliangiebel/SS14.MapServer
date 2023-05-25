@@ -30,7 +30,7 @@ public sealed class ContainerService
         return await _client.System.GetSystemInfoAsync();
     }
 
-    public async Task<string> BuildAndRun(string directory, List<string> command)
+    public async Task<string> BuildAndRun(string directory, string command, List<string> arguments)
     {
         throw new NotImplementedException();
     }

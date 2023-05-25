@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using NuGet.Packaging;
 using Serilog;
 using SS14.MapServer.Configuration;
 using ILogger = Serilog.ILogger;
@@ -26,9 +27,11 @@ public sealed class LocalBuildService
         return await process.StandardOutput.ReadToEndAsync();
     }
 
-    public async Task<string> BuildAndRun(string directory, List<string> command)
+    public async Task<string> BuildAndRun(string directory, string command, List<string> arguments)
     {
-        throw new NotImplementedException();
+        await Build(directory);
+        await Run(directory, command, arguments);
+        return "";
     }
 
     public async Task Build(string directory)
@@ -38,10 +41,7 @@ public sealed class LocalBuildService
         
         var outputDir = Path.Join(directory, _configuration.RelativeOutputPath);
         process.StartInfo.Arguments = $"build -o {outputDir}";
-        
-        process.ErrorDataReceived += ProcessOnErrorDataReceived;
-        process.OutputDataReceived += ProcessOnOutputDataReceived;
-        
+
         _log.Information("Started building {ProjectName}", _configuration.MapRendererProjectName);
         process.Start();
         await process.WaitForExitAsync();
@@ -55,27 +55,29 @@ public sealed class LocalBuildService
         _log.Information("Build finished");
     }
 
-    private void ProcessOnOutputDataReceived(object sender, DataReceivedEventArgs e)
-    {
-        if (e.Data == null)
-            return;
-        
-        _log.Debug(e.Data);
-    }
+    public async Task Run(string directory, string command, List<string> arguments)
+    { 
+        var executablePath = Path.Join(directory, command);
 
-    private void ProcessOnErrorDataReceived(object sender, DataReceivedEventArgs e)
-    {
-        if (e.Data == null)
-            return;
+        using var process = new Process();
+        SetUpProcess(process, executablePath);
+        process.StartInfo.ArgumentList.AddRange(arguments);
+       
+        _log.Information("Running: {Command} {Arguments}", command, string.Join(' ', arguments));
+        process.Start();
+        await process.WaitForExitAsync();
         
-        _log.Error(e.Data);
-    }
+        var output = await process.StandardOutput.ReadToEndAsync();
+        _log.Debug("Output:\n{Output}", output);
 
-    private void SetUpProcess(Process process, string? command = "dotnet.exe")
+        _log.Information("Run finished");
+
+    }
+    private void SetUpProcess(Process process, string? executable = "dotnet.exe")
     {
         process.StartInfo.UseShellExecute = false;
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.RedirectStandardError = true;
-        process.StartInfo.FileName = command;
+        process.StartInfo.FileName = executable;
     }
 }

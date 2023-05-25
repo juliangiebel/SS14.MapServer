@@ -28,15 +28,17 @@ public sealed class MapUpdateService
     public async Task UpdateMapsFromGit(List<string> maps)
     {
         var workingDirectory = await _gitService.Sync();
-        var mapRendererCommand = new List<string>
-        {
-            "maprenderer"
-        };
         
+        var command = Path.Join(
+            _buildConfiguration.RelativeOutputPath,
+            _buildConfiguration.MapRendererProjectName,
+            _buildConfiguration.MapRendererCommand
+        );
+
         var path = _buildConfiguration.Runner switch
         {
-            BuildRunnerName.Local => await _localBuildService.BuildAndRun(workingDirectory, mapRendererCommand),
-            BuildRunnerName.Container => await _containerService.BuildAndRun(workingDirectory, mapRendererCommand),
+            BuildRunnerName.Local => await _localBuildService.BuildAndRun(workingDirectory, command, maps),
+            BuildRunnerName.Container => await _containerService.BuildAndRun(workingDirectory, command, maps),
             _ => throw new ArgumentOutOfRangeException()
         };
         
