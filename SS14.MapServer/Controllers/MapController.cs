@@ -4,9 +4,12 @@ using BrunoZell.ModelBinding;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Quartz;
+using SS14.MapServer.Helpers;
 using SS14.MapServer.Models;
 using SS14.MapServer.Models.Entities;
 using SS14.MapServer.Services;
+using SS14.MapServer.Services.Interfaces;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace SS14.MapServer.Controllers
@@ -17,11 +20,13 @@ namespace SS14.MapServer.Controllers
     {
         private readonly Context _context;
         private readonly FileUploadService _fileUploadService;
+        private readonly IJobSchedulingService _schedulingService;
 
-        public MapController(Context context, FileUploadService fileUploadService)
+        public MapController(Context context, FileUploadService fileUploadService, IJobSchedulingService schedulingService)
         {
             _context = context;
             _fileUploadService = fileUploadService;
+            _schedulingService = schedulingService;
         }
 
         // GET: api/Map
@@ -157,6 +162,19 @@ namespace SS14.MapServer.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        [HttpPost("sync")]
+        [Consumes("application/json")]
+        public async Task<IActionResult> SyncMaps(List<string> mapFileNames)
+        {
+            var data = new JobDataMap
+            {
+                {Jobs.SyncMaps.MapListKey, mapFileNames}
+            };
+            
+            await _schedulingService.RunJob<Jobs.SyncMaps>(nameof(Jobs.SyncMaps), "Sync", data);
+            return Ok();
         }
 
         private async Task<Map?> FindMapWithGrids(string id)

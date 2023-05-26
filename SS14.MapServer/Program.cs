@@ -20,10 +20,10 @@ builder.Configuration.AddYamlFile("appsettings.Secret.yaml", true, true);
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddDbContext<Context>(opt => opt.UseNpgsql(builder.Configuration.GetConnectionString("default")));
-builder.Services.AddScoped<IMapReaderService, MapReaderServiceService>();
 builder.Services.AddScoped<FileUploadService>();
 builder.Services.AddScoped<ImageProcessingService>();
 builder.Services.AddScoped<IJobSchedulingService, JobSchedulingService>();
+builder.Services.AddScoped<IMapReaderService, MapReaderServiceService>();
 builder.Services.AddScoped<MapUpdateService>();
 builder.Services.AddSingleton<ContainerService>();
 builder.Services.AddSingleton<LocalBuildService>();

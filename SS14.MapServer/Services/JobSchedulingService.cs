@@ -1,16 +1,20 @@
 ﻿using Quartz;
 using Quartz.Impl;
+using Serilog;
 using SS14.MapServer.Services.Interfaces;
+using ILogger = Serilog.ILogger;
 
 namespace SS14.MapServer.Services;
 
 public sealed class JobSchedulingService : IJobSchedulingService
 {
     private readonly ISchedulerFactory _schedulerFactory;
-
+    private readonly ILogger _log;
+    
     public JobSchedulingService(ISchedulerFactory schedulerFactory)
     {
         _schedulerFactory = schedulerFactory;
+        _log = Log.ForContext(typeof(JobSchedulingService));
     }
 
     public async Task RunJob<T>(string name, string group, JobDataMap? data) where T : IJob
@@ -34,9 +38,15 @@ public sealed class JobSchedulingService : IJobSchedulingService
             .Build();
     }
 
-    public async Task ScheduleJob(IJobDetail job, ITrigger trigger)
+    public async Task ScheduleJob(IJobDetail job, ITrigger trigger, IScheduler? scheduler = null!)
     {
-        var scheduler = await _schedulerFactory.GetScheduler();
+        scheduler ??= await _schedulerFactory.GetScheduler();
+        if (await scheduler.CheckExists(job.Key))
+        {
+            _log.Warning("Tried to schedule a job that's already running: {JobKey}", job.Key);
+            return;
+        }
+        
         await scheduler.ScheduleJob(job, trigger);
     }
 }

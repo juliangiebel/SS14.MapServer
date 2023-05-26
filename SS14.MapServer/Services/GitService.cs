@@ -21,7 +21,7 @@ public sealed class GitService
     /// </summary>
     /// <param name="branch">[Optional] The branch to pull</param>
     /// <returns></returns>
-    public async Task<string> Sync(string? branch = null)
+    public string Sync(string? branch = null)
     {
         branch ??= _configuration.Branch;
         
@@ -32,13 +32,12 @@ public sealed class GitService
         if (!Path.IsPathRooted(repoDirectory))
             repoDirectory = Path.Join(Directory.GetCurrentDirectory(), repoDirectory);
         
-        await Task.Run(() =>
-        {
-            if (!Directory.Exists(repoDirectory))
-                Clone(repoDirectory, branch);
+       
+        if (!Directory.Exists(repoDirectory))
+            Clone(repoDirectory, branch);
 
-            Pull(repoDirectory, branch);
-        });
+        Pull(repoDirectory, branch);
+  
         
         return repoDirectory;
     }

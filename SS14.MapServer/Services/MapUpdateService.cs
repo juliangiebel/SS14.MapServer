@@ -5,6 +5,8 @@ namespace SS14.MapServer.Services;
 
 public sealed class MapUpdateService
 {
+    private static readonly Semaphore SyncSemaphore = new(1, 1);
+    
     private readonly BuildConfiguration _buildConfiguration = new();
     private readonly GitService _gitService;
     private readonly LocalBuildService _localBuildService;
@@ -25,9 +27,19 @@ public sealed class MapUpdateService
         configuration.Bind(BuildConfiguration.Name, _buildConfiguration);
     }
 
-    public async Task UpdateMapsFromGit(List<string> maps)
+    /// <summary>
+    /// Pulls the latest git commit, builds and runs the map renderer and imports the generated maps.
+    /// </summary>
+    /// <param name="maps">A list of map file names to be generated</param>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    /// <remarks>
+    /// Syncing the maps doesn't create a new working directory so running this in parallel would cause errors.<br/>
+    /// That's why this method is protected by a semaphore which prevents it from being run in parallel.
+    /// </remarks>
+    public async Task UpdateMapsFromGit(IEnumerable<string> maps)
     {
-        var workingDirectory = await _gitService.Sync();
+        SyncSemaphore.WaitOne(TimeSpan.FromMinutes(_buildConfiguration.ProcessTimeoutMinutes));
+        var workingDirectory = _gitService.Sync();
         
         var command = Path.Join(
             _buildConfiguration.RelativeOutputPath,
@@ -35,13 +47,21 @@ public sealed class MapUpdateService
             _buildConfiguration.MapRendererCommand
         );
 
-        var path = _buildConfiguration.Runner switch
+        var args = new List<string>
         {
-            BuildRunnerName.Local => await _localBuildService.BuildAndRun(workingDirectory, command, maps),
-            BuildRunnerName.Container => await _containerService.BuildAndRun(workingDirectory, command, maps),
-            _ => throw new ArgumentOutOfRangeException()
+            _buildConfiguration.MapRendererOptionsString
         };
         
+        args.AddRange(maps);
+
+        var path = _buildConfiguration.Runner switch
+        {
+            BuildRunnerName.Local => await _localBuildService.BuildAndRun(workingDirectory, command, args),
+            BuildRunnerName.Container => await _containerService.BuildAndRun(workingDirectory, command, args),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        SyncSemaphore.Release();
     }
 
     public async Task<List<string>> GetChangedMaps()
