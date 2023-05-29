@@ -1,0 +1,3 @@
+[submodule "SS14.GithubApiHelper"]
+	path = SS14.GithubApiHelper
+	url = git@github.com:juliangiebel/SS14.GithubApiHelper.git
