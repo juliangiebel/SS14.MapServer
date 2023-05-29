@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Octokit;
+using SS14.GithubApiHelper.Helpers;
+using SS14.MapServer.Configuration;
 using SS14.MapServer.Helpers;
 
 namespace SS14.MapServer.Controllers;
@@ -10,12 +12,15 @@ namespace SS14.MapServer.Controllers;
 public class GitHubWebhookController : ControllerBase
 {
     private const string GithubEventHeader = "x-github-event";
+    private const string GitBranchRefPrefix = "refs/heads/";
 
     private readonly IConfiguration _configuration;
+    private readonly GitConfiguration _gitConfiguration;
 
     public GitHubWebhookController(IConfiguration configuration)
     {
         _configuration = configuration;
+        configuration.Bind(GitConfiguration.Name, _gitConfiguration);
     }
 
     [HttpPost]
@@ -38,6 +43,13 @@ public class GitHubWebhookController : ControllerBase
 
     private void HandlePushEvent(PushEventPayload payload)
     {
+        if (!payload.Ref.Equals(GitBranchRefPrefix + _gitConfiguration.Branch))
+            return;
+
+        foreach (var commit in payload.Commits)
+        {
+            
+        }
         //TODO: Check if branch matches configured target branch and schedule an update maps job
     }
 }

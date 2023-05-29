@@ -39,29 +39,38 @@ public sealed class MapUpdateService
     public async Task UpdateMapsFromGit(IEnumerable<string> maps)
     {
         SyncSemaphore.WaitOne(TimeSpan.FromMinutes(_buildConfiguration.ProcessTimeoutMinutes));
-        var workingDirectory = _gitService.Sync();
         
-        var command = Path.Join(
-            _buildConfiguration.RelativeOutputPath,
-            _buildConfiguration.MapRendererProjectName,
-            _buildConfiguration.MapRendererCommand
-        );
-
-        var args = new List<string>
+        try
         {
-            _buildConfiguration.MapRendererOptionsString
-        };
-        
-        args.AddRange(maps);
+            
+            var workingDirectory = _gitService.Sync();
 
-        var path = _buildConfiguration.Runner switch
+            var command = Path.Join(
+                _buildConfiguration.RelativeOutputPath,
+                _buildConfiguration.MapRendererProjectName,
+                _buildConfiguration.MapRendererCommand
+            );
+
+            var args = new List<string>
+            {
+                _buildConfiguration.MapRendererOptionsString
+            };
+
+            args.AddRange(maps);
+
+            var path = _buildConfiguration.Runner switch
+            {
+                BuildRunnerName.Local => await _localBuildService.BuildAndRun(workingDirectory, command, args),
+                BuildRunnerName.Container => await _containerService.BuildAndRun(workingDirectory, command, args),
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            await _mapReaderService.UpdateMapsFromFS(path);
+        }
+        finally
         {
-            BuildRunnerName.Local => await _localBuildService.BuildAndRun(workingDirectory, command, args),
-            BuildRunnerName.Container => await _containerService.BuildAndRun(workingDirectory, command, args),
-            _ => throw new ArgumentOutOfRangeException()
-        };
-
-        SyncSemaphore.Release();
+            SyncSemaphore.Release();   
+        }
     }
 
     public async Task<List<string>> GetChangedMaps()

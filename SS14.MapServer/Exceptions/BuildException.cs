@@ -1,4 +1,4 @@
-﻿namespace SS14.MapServer;
+﻿namespace SS14.MapServer.Exceptions;
 
 public class BuildException : Exception
 {

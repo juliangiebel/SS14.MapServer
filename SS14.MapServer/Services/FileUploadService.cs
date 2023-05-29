@@ -34,7 +34,7 @@ public sealed class FileUploadService
         image.InternalPath = path;
     }
     
-    public async Task UploadGridImages(Map map, IList<IFormFile> images)
+    public async Task UploadGridImages(Map map, IEnumerable<IFormFile> images)
     {
         var mapPath = Path.Combine(_configuration.GridImagesPath, map.Id);
             

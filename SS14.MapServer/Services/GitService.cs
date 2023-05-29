@@ -1,4 +1,5 @@
 ﻿using LibGit2Sharp;
+using LibGit2Sharp.Handlers;
 using Serilog;
 using SS14.MapServer.Configuration;
 using ILogger = Serilog.ILogger;
@@ -49,7 +50,8 @@ public sealed class GitService
         {
             RecurseSubmodules = true,
             BranchName = branch,
-            OnProgress = LogProgress
+            OnProgress = LogProgress,
+            OnCheckoutProgress = (progress, _, _) => LogProgress(progress)
             
         });
         _log.Information("Done cloning");

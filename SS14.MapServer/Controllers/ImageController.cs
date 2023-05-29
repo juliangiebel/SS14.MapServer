@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MimeTypes;
 using Serilog;
+using SS14.MapServer.Exceptions;
 using SS14.MapServer.Models;
 using SS14.MapServer.Models.Entities;
 using SS14.MapServer.Services;

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MimeTypes;
+using SS14.MapServer.Exceptions;
 using SS14.MapServer.Models;
 
 namespace SS14.MapServer.Controllers;

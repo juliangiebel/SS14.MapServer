@@ -3633,4 +3633,8 @@
       <_ContentIncludedByDefault Remove="data\git\space-station-14\RobustToolbox\XamlX\tests\xunit.runner.json" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\SS14.GithubApiHelper\SS14.GithubApiHelper.csproj" />
+    </ItemGroup>
+
 </Project>

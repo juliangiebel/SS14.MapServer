@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
 namespace SS14.MapServer.Models.Entities;
-#pragma warning disable CS8618
 
 [PrimaryKey(nameof(MapId), nameof(GridId), nameof(X), nameof(Y))]
 [Index(nameof(MapId), nameof(GridId))]

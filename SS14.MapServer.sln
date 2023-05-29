@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.MapServer", "SS14.MapS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.MapServer.Tests", "SS14.MapServer.Tests\SS14.MapServer.Tests.csproj", "{5C1E394E-16F3-4BF0-9F06-30ABDE9DA3B5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.GithubApiHelper", "SS14.GithubApiHelper\SS14.GithubApiHelper.csproj", "{08940541-7AEA-4EAD-8170-367F106A833F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{5C1E394E-16F3-4BF0-9F06-30ABDE9DA3B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5C1E394E-16F3-4BF0-9F06-30ABDE9DA3B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5C1E394E-16F3-4BF0-9F06-30ABDE9DA3B5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08940541-7AEA-4EAD-8170-367F106A833F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08940541-7AEA-4EAD-8170-367F106A833F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08940541-7AEA-4EAD-8170-367F106A833F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08940541-7AEA-4EAD-8170-367F106A833F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

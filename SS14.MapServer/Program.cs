@@ -94,6 +94,8 @@ app.UseAuthorization();
 
 app.MapControllers().RequireAuthorization();
 
+//await app.Services.GetService<IMapReaderService>()?.UpdateMapsFromFS(@"C:\Users\julia\Projekte\SS14.MapServer\SS14.MapServer\data\git\space-station-14\Resources\MapImages")!;
+
 app.Run();
 return 0;
 

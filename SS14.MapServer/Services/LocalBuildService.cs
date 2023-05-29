@@ -2,6 +2,7 @@
 using NuGet.Packaging;
 using Serilog;
 using SS14.MapServer.Configuration;
+using SS14.MapServer.Exceptions;
 using ILogger = Serilog.ILogger;
 
 namespace SS14.MapServer.Services;
@@ -31,7 +32,7 @@ public sealed class LocalBuildService
     {
         await Build(directory);
         await Run(directory, command, arguments);
-        return "";
+        return Path.Join(directory, _configuration.RelativeMapFilesPath);
     }
 
     public async Task Build(string directory)
@@ -41,7 +42,7 @@ public sealed class LocalBuildService
         process.StartInfo.WorkingDirectory = directory;
 
         var outputDir = Path.Join(directory, _configuration.RelativeOutputPath);
-        process.StartInfo.Arguments = "build";
+        process.StartInfo.Arguments = "build -c Release";
         process.OutputDataReceived += LogOutput;
         
         _log.Information("Started building {ProjectName}", _configuration.MapRendererProjectName);
@@ -72,12 +73,15 @@ public sealed class LocalBuildService
         process.StartInfo.WorkingDirectory = directory;
         process.StartInfo.Arguments = string.Join(' ', arguments);
         process.OutputDataReceived += LogOutput;
+        process.ErrorDataReceived += LogOutput;
        
         _log.Information("Running: {Command} {Arguments}", command, string.Join(' ', arguments));
         
         process.Start();
         process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
         await process.WaitForExitAsync().WaitAsync(TimeSpan.FromMinutes(_configuration.ProcessTimeoutMinutes));
+        process.CancelErrorRead();
         process.CancelOutputRead();
         
         if (!process.HasExited)
