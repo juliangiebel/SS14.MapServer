@@ -26,8 +26,7 @@ public sealed class GitService
     {
         branch ??= _configuration.Branch;
         
-        var repositoryName = Path.GetFileName(_configuration.RepositoryUrl);
-        repositoryName = repositoryName.Replace(Path.GetExtension(repositoryName), "");
+        var repositoryName = Path.GetFileNameWithoutExtension(_configuration.RepositoryUrl);
         var repoDirectory = Path.Join(_configuration.TargetDirectory, repositoryName);
 
         if (!Path.IsPathRooted(repoDirectory))

@@ -18,6 +18,20 @@ public sealed class GitConfiguration
     /// Requires the map server to be installed as a github app.
     /// </remarks>
     public bool RetrieveMapFilesFromDiff { get; set; } = true;
+
+    /// <summary>
+    /// Glob patterns for map files to check for
+    /// </summary>
+    public List<string> MapFilePatterns { get; set; } = new()
+    {
+        "Resources/Maps/*.yml"
+    };
+    
+    /// <summary>
+    /// Glob patterns for excluding specific map files
+    /// </summary>
+    public List<string> MapFileExcludePatterns { get; set; } = new();
+
     
     /// <summary>
     /// Prevent updating maps when there where any c# files changed.
@@ -29,6 +43,14 @@ public sealed class GitConfiguration
     /// </remarks>
     public bool DontRunWithCodeChanges { get; set; } = true;
 
+    /// <summary>
+    /// Glob patterns used for detecting code changed
+    /// </summary>
+    public List<string> CodeChangePatterns { get; set; } = new()
+    {
+        "**/*.cs"
+    };
+    
     /// <summary>
     /// Setting this to true enables listening to the PullRequest event for putting the rendered map as a comment into the PR
     /// </summary>

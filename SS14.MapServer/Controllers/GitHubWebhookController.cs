@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.FileSystemGlobbing;
+using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 using Octokit;
 using SS14.GithubApiHelper.Helpers;
 using SS14.MapServer.Configuration;
@@ -68,7 +70,19 @@ public class GitHubWebhookController : ControllerBase
             payload.Before, 
             payload.After);
 
-        return false;
+        var mapFileMatcher = new Matcher();
+        mapFileMatcher.AddIncludePatterns(_gitConfiguration.MapFilePatterns);
+        mapFileMatcher.AddExcludePatterns(_gitConfiguration.MapFileExcludePatterns);
+        
+        var repoName = Path.GetFileNameWithoutExtension(_gitConfiguration.RepositoryUrl);
+        var mapFileMatchResult = mapFileMatcher.Execute(
+            new DirectoryInfoWrapper(new DirectoryInfo(Path.Join(_gitConfiguration.TargetDirectory, repoName)))
+            );
+
+        if (!mapFileMatchResult.HasMatches)
+            return false;
+        
+        return true;
     }
 }
 
