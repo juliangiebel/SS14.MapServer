@@ -18,7 +18,7 @@ public class GitHubWebhookController : ControllerBase
     private readonly GithubApiService _githubApiService;
     
     private readonly IConfiguration _configuration;
-    private readonly GitConfiguration _gitConfiguration;
+    private readonly GitConfiguration _gitConfiguration = new();
 
     public GitHubWebhookController(IConfiguration configuration, GithubApiService githubApiService)
     {
@@ -31,6 +31,7 @@ public class GitHubWebhookController : ControllerBase
     [AllowAnonymous]
     public async Task Post()
     {
+        Request.EnableBuffering();
         if (!Request.Headers.TryGetValue(GithubEventHeader, out var eventName) || !await GithubWebhookHelper.VerifyWebhook(Request, _configuration))
             return;
 
@@ -65,13 +66,18 @@ public class GitHubWebhookController : ControllerBase
             payload.Installation.Id, 
             payload.Repository.Id, 
             payload.Before, 
-            payload.Head);
+            payload.After);
 
         return false;
     }
 }
 
+/// <summary>
+/// Imagine having a stable API lol. Contains the correct properties for the commit before and after the push event.
+/// </summary>
 public sealed class PatchedPushEventPayload : PushEventPayload
 {
     public string Before { get; private set; }
+    public string After { get; private set; }
+    public new string Ref { get; private set; }
 }

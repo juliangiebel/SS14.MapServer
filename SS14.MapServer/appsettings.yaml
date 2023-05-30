@@ -17,3 +17,5 @@ Serilog:
 
 AllowedHosts: "*"
 
+Github:
+  AppName: "SS14.MapServer"

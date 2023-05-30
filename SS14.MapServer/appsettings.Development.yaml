@@ -14,3 +14,6 @@ Auth:
   
 Git:
   TargetDirectory: "data/git"
+  
+Github:
+  AppName: "SS14.MapServer"

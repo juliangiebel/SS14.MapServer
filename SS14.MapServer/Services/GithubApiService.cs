@@ -6,7 +6,7 @@ namespace SS14.MapServer.Services;
 
 public sealed class GithubApiService : AbstractGithubApiService
 {
-    public GithubApiService(IConfiguration configuration, IssueRateLimiterService rateLimiter) 
+    public GithubApiService(IConfiguration configuration, RateLimiterService rateLimiter) 
         : base(configuration, rateLimiter)
     {
     }

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Quartz;
 using Serilog;
+using SS14.GithubApiHelper.Services;
 using SS14.MapServer;
 using SS14.MapServer.Models;
 using SS14.MapServer.Security;
@@ -25,6 +26,8 @@ builder.Services.AddScoped<ImageProcessingService>();
 builder.Services.AddScoped<IJobSchedulingService, JobSchedulingService>();
 builder.Services.AddScoped<IMapReaderService, MapReaderServiceService>();
 builder.Services.AddScoped<MapUpdateService>();
+builder.Services.AddSingleton<GithubApiService>();
+builder.Services.AddSingleton<RateLimiterService>();
 builder.Services.AddSingleton<ContainerService>();
 builder.Services.AddSingleton<LocalBuildService>();
 builder.Services.AddSingleton<GitService>();
@@ -87,7 +90,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
