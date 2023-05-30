@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
+using Microsoft.IdentityModel.Tokens;
 using Octokit;
 using SS14.GithubApiHelper.Helpers;
 using SS14.MapServer.Configuration;
@@ -53,36 +54,43 @@ public class GitHubWebhookController : ControllerBase
         if (!payload.Ref.Equals(GitBranchRefPrefix + _gitConfiguration.Branch))
             return;
 
-        if (!await CheckFiles(payload))
+        var files = await CheckFiles(payload);
+        if (files.IsNullOrEmpty())
             return;
         //TODO: Check if branch matches configured target branch and schedule an update maps job
     }
 
-    private async Task<bool> CheckFiles(PatchedPushEventPayload payload)
+    private async Task<IEnumerable<string>> CheckFiles(PatchedPushEventPayload payload)
     {
-        if (!_gitConfiguration.RetrieveMapFilesFromDiff)
-            return true;
-
-
-        var files = await _githubApiService.GetChangedFilesBetweenCommits(
+        var enumerable = await _githubApiService.GetChangedFilesBetweenCommits(
             payload.Installation.Id, 
             payload.Repository.Id, 
             payload.Before, 
             payload.After);
 
+        var files = enumerable.ToList();
+        
+        //Check for map files
         var mapFileMatcher = new Matcher();
         mapFileMatcher.AddIncludePatterns(_gitConfiguration.MapFilePatterns);
         mapFileMatcher.AddExcludePatterns(_gitConfiguration.MapFileExcludePatterns);
-        
-        var repoName = Path.GetFileNameWithoutExtension(_gitConfiguration.RepositoryUrl);
-        var mapFileMatchResult = mapFileMatcher.Execute(
-            new DirectoryInfoWrapper(new DirectoryInfo(Path.Join(_gitConfiguration.TargetDirectory, repoName)))
-            );
+        var mapFileMatchResult = mapFileMatcher.Match(files);
 
         if (!mapFileMatchResult.HasMatches)
-            return false;
+            return Enumerable.Empty<string>();
+
+        if (!_gitConfiguration.DontRunWithCodeChanges)
+            return mapFileMatchResult.Files.Select(match => match.Path);
         
-        return true;
+        //Check for code files
+        var codeFileMatcher = new Matcher();
+        codeFileMatcher.AddIncludePatterns(_gitConfiguration.CodeChangePatterns);
+        var codeFileMatchResult = codeFileMatcher.Match(files);
+
+        if (codeFileMatchResult.HasMatches)
+            return Enumerable.Empty<string>();
+
+        return mapFileMatchResult.Files.Select(match => match.Path);
     }
 }
 
