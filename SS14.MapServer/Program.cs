@@ -21,17 +21,20 @@ builder.Configuration.AddYamlFile("appsettings.Secret.yaml", true, true);
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddDbContext<Context>(opt => opt.UseNpgsql(builder.Configuration.GetConnectionString("default")));
+
 builder.Services.AddScoped<FileUploadService>();
 builder.Services.AddScoped<ImageProcessingService>();
 builder.Services.AddScoped<IJobSchedulingService, JobSchedulingService>();
 builder.Services.AddScoped<IMapReaderService, MapReaderServiceService>();
 builder.Services.AddScoped<MapUpdateService>();
+
 builder.Services.AddSingleton<GithubApiService>();
 builder.Services.AddSingleton<RateLimiterService>();
 builder.Services.AddSingleton<ContainerService>();
 builder.Services.AddSingleton<LocalBuildService>();
 builder.Services.AddSingleton<GitService>();
 builder.Services.AddSingleton<StartupCheckService>();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c => {
     c.EnableAnnotations();

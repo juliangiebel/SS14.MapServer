@@ -6,8 +6,6 @@ public sealed class GitConfiguration
 
     public string RepositoryUrl { get; set; } = string.Empty;
     
-    public string TargetDirectory { get; set; } = string.Empty;
-    
     public string Branch { get; set; } = "master";
     
     /// <summary>

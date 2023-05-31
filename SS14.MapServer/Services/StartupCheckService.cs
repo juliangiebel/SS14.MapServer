@@ -9,6 +9,7 @@ public sealed class StartupCheckService
     private readonly FilePathsConfiguration _filePathsConfiguration = new();
     private readonly BuildConfiguration _buildConfiguration = new();
     private readonly GitConfiguration _gitConfiguration = new();
+    private readonly ProcessingConfiguration _processingConfiguration = new();
     private readonly ContainerService _containerService;
     private readonly LocalBuildService _localBuildService;
 
@@ -20,6 +21,7 @@ public sealed class StartupCheckService
         configuration.Bind(FilePathsConfiguration.Name, _filePathsConfiguration);
         configuration.Bind(BuildConfiguration.Name, _buildConfiguration);
         configuration.Bind(GitConfiguration.Name, _gitConfiguration);
+        configuration.Bind(ProcessingConfiguration.Name, _processingConfiguration);
     }
 
     public async Task<bool> RunStartupCheck()
@@ -44,9 +46,9 @@ public sealed class StartupCheckService
                 result = false;
             }
             
-            if (!Directory.Exists(_gitConfiguration.TargetDirectory))
+            if (!Directory.Exists(_processingConfiguration.TargetDirectory))
             {
-                Log.Error(" - Git.TargetDirectory doesn't exist: {TargetDir}", _gitConfiguration.TargetDirectory);
+                Log.Error(" - Processing.TargetDirectory doesn't exist: {TargetDir}", _processingConfiguration.TargetDirectory);
                 result = false;
             }
         }

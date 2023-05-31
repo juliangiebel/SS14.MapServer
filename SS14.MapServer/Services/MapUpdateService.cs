@@ -5,8 +5,6 @@ namespace SS14.MapServer.Services;
 
 public sealed class MapUpdateService
 {
-    private static readonly Semaphore SyncSemaphore = new(1, 1);
-    
     private readonly BuildConfiguration _buildConfiguration = new();
     private readonly GitService _gitService;
     private readonly LocalBuildService _localBuildService;
@@ -30,47 +28,40 @@ public sealed class MapUpdateService
     /// <summary>
     /// Pulls the latest git commit, builds and runs the map renderer and imports the generated maps.
     /// </summary>
+    /// <param name="directory">The directory to operate in</param>
     /// <param name="maps">A list of map file names to be generated</param>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
+    /// <returns>The commit that was checked out for building and running the map renderer</returns>
     /// <remarks>
-    /// Syncing the maps doesn't create a new working directory so running this in parallel would cause errors.<br/>
-    /// That's why this method is protected by a semaphore which prevents it from being run in parallel.
+    /// Syncing the maps doesn't create a new working directory so running this in parallel on the same directory would cause errors.<br/>
     /// </remarks>
-    public async Task UpdateMapsFromGit(IEnumerable<string> maps)
+    public async Task<string> UpdateMapsFromGit(string directory, IEnumerable<string> maps)
     {
-        SyncSemaphore.WaitOne(TimeSpan.FromMinutes(_buildConfiguration.ProcessTimeoutMinutes));
-        
-        try
+        var workingDirectory = _gitService.Sync(directory);
+
+        var command = Path.Join(
+            _buildConfiguration.RelativeOutputPath,
+            _buildConfiguration.MapRendererProjectName,
+            _buildConfiguration.MapRendererCommand
+        );
+
+        var args = new List<string>
         {
-            
-            var workingDirectory = _gitService.Sync();
+            _buildConfiguration.MapRendererOptionsString
+        };
 
-            var command = Path.Join(
-                _buildConfiguration.RelativeOutputPath,
-                _buildConfiguration.MapRendererProjectName,
-                _buildConfiguration.MapRendererCommand
-            );
+        args.AddRange(maps);
 
-            var args = new List<string>
-            {
-                _buildConfiguration.MapRendererOptionsString
-            };
-
-            args.AddRange(maps);
-
-            var path = _buildConfiguration.Runner switch
-            {
-                BuildRunnerName.Local => await _localBuildService.BuildAndRun(workingDirectory, command, args),
-                BuildRunnerName.Container => await _containerService.BuildAndRun(workingDirectory, command, args),
-                _ => throw new ArgumentOutOfRangeException()
-            };
-
-            await _mapReaderService.UpdateMapsFromFS(path);
-        }
-        finally
+        var path = _buildConfiguration.Runner switch
         {
-            SyncSemaphore.Release();   
-        }
+            BuildRunnerName.Local => await _localBuildService.BuildAndRun(workingDirectory, command, args),
+            BuildRunnerName.Container => await _containerService.BuildAndRun(workingDirectory, command, args),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        await _mapReaderService.UpdateMapsFromFS(path);
+
+        return _gitService.GetRepoCommitHash(workingDirectory);
     }
 
     public async Task<List<string>> GetChangedMaps()

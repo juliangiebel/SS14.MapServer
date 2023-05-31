@@ -22,12 +22,12 @@ public sealed class GitService
     /// </summary>
     /// <param name="branch">[Optional] The branch to pull</param>
     /// <returns></returns>
-    public string Sync(string? branch = null)
+    public string Sync(string workingDirectory, string? branch = null)
     {
         branch ??= _configuration.Branch;
         
         var repositoryName = Path.GetFileNameWithoutExtension(_configuration.RepositoryUrl);
-        var repoDirectory = Path.Join(_configuration.TargetDirectory, repositoryName);
+        var repoDirectory = Path.Join(workingDirectory, repositoryName);
 
         if (!Path.IsPathRooted(repoDirectory))
             repoDirectory = Path.Join(Directory.GetCurrentDirectory(), repoDirectory);
@@ -89,5 +89,17 @@ public sealed class GitService
     {        
         _log.Verbose("Progress: {Progress}", progress);
         return true;
+    }
+
+    /// <summary>
+    /// Returns the commit hash the repo contained in the given directory is on
+    /// </summary>
+    /// <param name="directory">A directory containing a git repository</param>
+    /// <returns>The commit has of the repository</returns>
+    /// <exception cref="NotImplementedException"></exception>
+    public string GetRepoCommitHash(string directory)
+    {
+        using var repository = new Repository(directory);
+        return repository.Head.Tip.Sha;
     }
 }
