@@ -1,5 +1,4 @@
 ﻿using LibGit2Sharp;
-using LibGit2Sharp.Handlers;
 using Serilog;
 using SS14.MapServer.Configuration;
 using ILogger = Serilog.ILogger;
@@ -20,11 +19,12 @@ public sealed class GitService
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="branch">[Optional] The branch to pull</param>
+    /// <param name="workingDirectory"></param>
+    /// <param name="gitRef">[Optional] The Ref to pull</param>
     /// <returns></returns>
-    public string Sync(string workingDirectory, string? branch = null)
+    public string Sync(string workingDirectory, string? gitRef = null)
     {
-        branch ??= _configuration.Branch;
+        gitRef ??= _configuration.Branch;
         
         var repositoryName = Path.GetFileNameWithoutExtension(_configuration.RepositoryUrl);
         var repoDirectory = Path.Join(workingDirectory, repositoryName);
@@ -34,34 +34,35 @@ public sealed class GitService
         
        
         if (!Directory.Exists(repoDirectory))
-            Clone(repoDirectory, branch);
+            Clone(repoDirectory, gitRef);
 
-        Pull(repoDirectory, branch);
+        Pull(repoDirectory, gitRef);
   
         
         return repoDirectory;
     }
 
-    private void Clone(string directory, string branch)
+    private void Clone(string directory, string gitRef)
     {
-        _log.Information("Cloning branch {Branch}...", branch);
-        Repository.Clone(_configuration.RepositoryUrl, directory, new CloneOptions
+        _log.Information("Cloning branch/commit {Ref}...", gitRef);
+        var repoDirectory = Repository.Clone(_configuration.RepositoryUrl, directory, new CloneOptions
         {
             RecurseSubmodules = true,
-            BranchName = branch,
             OnProgress = LogProgress,
             OnCheckoutProgress = (progress, _, _) => LogProgress(progress)
-            
         });
+        
+        using var repository = new Repository(repoDirectory);
+        Commands.Checkout(repository, gitRef);
         _log.Information("Done cloning");
     }
     
-    private void Pull(string repoDirectory, string branch)
+    private void Pull(string repoDirectory, string gitRef)
     {
-        _log.Information( "Pulling branch {Branch}...", branch);
+        _log.Information( "Pulling branch/commit {Ref}...", gitRef);
         
         using var repository = new Repository(repoDirectory);
-        Commands.Checkout(repository, branch);
+        Commands.Checkout(repository, gitRef);
         var signature = repository.Config.BuildSignature(DateTimeOffset.Now);
 
         var pullOptions = new PullOptions

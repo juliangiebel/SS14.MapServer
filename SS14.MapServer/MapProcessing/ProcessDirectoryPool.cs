@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.ObjectPool;
 
-namespace SS14.MapServer.Helpers;
+namespace SS14.MapServer.MapProcessing;
 
 public sealed class ProcessDirectoryPool
 {
@@ -9,7 +9,7 @@ public sealed class ProcessDirectoryPool
     /// <summary>
     /// Gets raised when a process directory was returned to the pool
     /// </summary>
-    public event EventHandler Returned;
+    public event EventHandler? Returned;
 
     public int Count { get; private set; } = 0;
     public int MaxPoolSize { get; private set; }
@@ -23,6 +23,17 @@ public sealed class ProcessDirectoryPool
 
         _pool = new DefaultObjectPool<ProcessDirectory>(new ProcessDirectoryPoolPolicy(poolDirectory), maxPoolSize);
         MaxPoolSize = maxPoolSize;
+
+        foreach (var directory in directoryInfo.EnumerateDirectories())
+        {
+            if (Count == MaxPoolSize)
+                break;
+
+            var processDirectory = new ProcessDirectory(directory);
+            _pool.Return(processDirectory);
+            Count++;
+            Available++;
+        }
     }
 
     public bool HasAvailable()
@@ -32,6 +43,9 @@ public sealed class ProcessDirectoryPool
 
     public async Task<ProcessDirectory> WaitAvailable(CancellationToken cancellationToken = default)
     {
+        if (HasAvailable())
+            return Get();
+        
         var completionSource = new TaskCompletionSource<ProcessDirectory>();
 
         EventHandler handler = (_, _) =>
@@ -72,7 +86,7 @@ public sealed class ProcessDirectoryPool
         }
         
         _pool.Return(directory);
-        Returned.Invoke(this, EventArgs.Empty);
+        Returned?.Invoke(this, EventArgs.Empty);
     }
     
     private ProcessDirectory Get()

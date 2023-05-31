@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using SS14.MapServer.Models.Types;
 using Point = SS14.MapServer.Models.Types.Point;
 
-namespace SS14.MapServer.Models;
+namespace SS14.MapServer.Models.DTOs;
 
 public sealed class GridData
 {

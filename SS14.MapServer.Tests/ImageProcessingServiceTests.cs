@@ -1,4 +1,5 @@
 using SS14.MapServer.Helpers;
+using SS14.MapServer.MapProcessing.Services;
 using SS14.MapServer.Services;
 
 namespace SS14.MapServer.Tests;

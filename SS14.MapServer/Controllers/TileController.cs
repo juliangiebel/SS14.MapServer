@@ -26,7 +26,7 @@ public class TileController : ControllerBase
     {
         var map = await _context.Maps!
             .Include(map => map.Grids)
-            .Where(map => map.Id.Equals(id))
+            .Where(map => map.MapId.Equals(id))
             .SingleOrDefaultAsync();
         
         if (map == null)

@@ -3,11 +3,12 @@ using Newtonsoft.Json;
 using SS14.MapServer.Configuration;
 using SS14.MapServer.Helpers;
 using SS14.MapServer.Models;
+using SS14.MapServer.Models.DTOs;
 using SS14.MapServer.Models.Entities;
-using SS14.MapServer.Models.Types;
+using SS14.MapServer.Services;
 using SS14.MapServer.Services.Interfaces;
 
-namespace SS14.MapServer.Services;
+namespace SS14.MapServer.MapProcessing.Services;
 
 public sealed class MapReaderServiceService : IMapReaderService
 {
@@ -19,15 +20,16 @@ public sealed class MapReaderServiceService : IMapReaderService
     {
         _fileUploadService = fileUploadService;
         _context = context;
-        
+
         configuration.Bind(BuildConfiguration.Name, _buildConfiguration);
     }
 
-    public async Task UpdateMapsFromFS(string path)
+    public async Task<IList<Guid>> UpdateMapsFromFs(string path, CancellationToken cancellationToken = default)
     {
         if (!Directory.Exists(path))
             throw new DirectoryNotFoundException($"Map import path not found: {path}");
 
+        var ids = new List<Guid>();
         var directories = Directory.EnumerateDirectories(path);
         foreach (var directory in directories)
         {
@@ -36,10 +38,10 @@ public sealed class MapReaderServiceService : IMapReaderService
                 continue;
 
             string rawJson;
-            
+
             using (var reader = new StreamReader(dataFilePath))
             {
-                rawJson = await reader.ReadToEndAsync();
+                rawJson = await reader.ReadToEndAsync(cancellationToken);
             }
 
             var converter = new MapDataAreaConverter();
@@ -49,21 +51,21 @@ public sealed class MapReaderServiceService : IMapReaderService
 
             var map = await _context.Maps?
                 .Include(e => e.Grids)
-                .SingleOrDefaultAsync(e => e.Id == data.Id)!;
+                .SingleOrDefaultAsync(e => e.MapId == data.Id, cancellationToken)!;
 
             var newMap = false;
-            
+
             if (map == default)
             {
                 map = new Map();
                 newMap = true;
             }
 
-            map.Id = data.Id;
+            map.MapId = data.Id;
             map.DisplayName = data.DisplayName;
             map.Attribution = data.Attribution;
             map.ParallaxLayers = data.ParallaxLayers;
-            
+
             //Remove previous grids if there are any
             if (map.Grids.Count > 0)
                 _context.RemoveRange(map.Grids);
@@ -72,7 +74,7 @@ public sealed class MapReaderServiceService : IMapReaderService
 
             var streams = new List<FileStream>();
             var gridImages = new List<IFormFile>();
-            
+
             foreach (var gridData in data.Grids)
             {
                 var imagePath = Path.Join(path, gridData.Path);
@@ -81,7 +83,7 @@ public sealed class MapReaderServiceService : IMapReaderService
                 var formFile = new FormFile(file, 0, file.Length, fileName, fileName);
                 gridImages.Add(formFile);
                 streams.Add(file);
-                
+
                 var grid = new Grid
                 {
                     Id = Guid.NewGuid(),
@@ -103,13 +105,16 @@ public sealed class MapReaderServiceService : IMapReaderService
 
             if (newMap)
             {
-                await _context.Maps.AddAsync(map);
+                var id = (await _context.Maps.AddAsync(map, cancellationToken)).Entity.Id;
+                ids.Add(id);
             }
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
         }
-        
+
         if (_buildConfiguration.CleanMapFolderAfterImport)
             new DirectoryInfo(path).Clear();
+
+        return ids;
     }
 }

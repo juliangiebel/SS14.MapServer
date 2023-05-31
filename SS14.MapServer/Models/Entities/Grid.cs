@@ -11,7 +11,7 @@ public class Grid
     public Guid Id {get; set;}
     [Required]
     public int GridId {get; set;}
-    public bool Tiled {get; set;} //Not yet supported
+    public bool Tiled {get; set;}
     public int TileSize { get; set; } = 256;
     public Point Offset {get; set;} = new(0, 0);
     [Required]

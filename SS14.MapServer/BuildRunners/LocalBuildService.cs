@@ -1,11 +1,10 @@
 ﻿using System.Diagnostics;
-using NuGet.Packaging;
 using Serilog;
 using SS14.MapServer.Configuration;
 using SS14.MapServer.Exceptions;
 using ILogger = Serilog.ILogger;
 
-namespace SS14.MapServer.Services;
+namespace SS14.MapServer.BuildRunners;
 
 public sealed class LocalBuildService
 {
@@ -18,24 +17,24 @@ public sealed class LocalBuildService
         _log = Log.ForContext(typeof(LocalBuildService));
     }
 
-    public async Task<string> GetDotNetVersion()
+    public async Task<string> GetDotNetVersion(CancellationToken cancellationToken = default)
     {
         using var process = new Process();
         SetUpProcess(process);
         process.StartInfo.Arguments = "--version";
         process.Start();
-        await process.WaitForExitAsync();
-        return await process.StandardOutput.ReadToEndAsync();
+        await process.WaitForExitAsync(cancellationToken);
+        return await process.StandardOutput.ReadToEndAsync(cancellationToken);
     }
 
-    public async Task<string> BuildAndRun(string directory, string command, List<string> arguments)
+    public async Task<string> BuildAndRun(string directory, string command, List<string> arguments, CancellationToken cancellationToken = default)
     {
-        await Build(directory);
-        await Run(directory, command, arguments);
+        await Build(directory, cancellationToken);
+        await Run(directory, command, arguments, cancellationToken);
         return Path.Join(directory, _configuration.RelativeMapFilesPath);
     }
 
-    public async Task Build(string directory)
+    public async Task Build(string directory, CancellationToken cancellationToken = default)
     {
         using var process = new Process();
         SetUpProcess(process);
@@ -49,7 +48,7 @@ public sealed class LocalBuildService
         
         process.Start();
         process.BeginOutputReadLine();
-        await process.WaitForExitAsync().WaitAsync(TimeSpan.FromMinutes(_configuration.ProcessTimeoutMinutes));
+        await process.WaitForExitAsync(cancellationToken).WaitAsync(TimeSpan.FromMinutes(_configuration.ProcessTimeoutMinutes), cancellationToken);
         process.CancelOutputRead();
 
         if (!process.HasExited)
@@ -64,7 +63,7 @@ public sealed class LocalBuildService
         _log.Information("Build finished");
     }
 
-    public async Task Run(string directory, string command, List<string> arguments)
+    public async Task Run(string directory, string command, List<string> arguments, CancellationToken cancellationToken = default)
     {
         var executablePath = Path.Join(directory, command);
         
@@ -80,7 +79,7 @@ public sealed class LocalBuildService
         process.Start();
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
-        await process.WaitForExitAsync().WaitAsync(TimeSpan.FromMinutes(_configuration.ProcessTimeoutMinutes));
+        await process.WaitForExitAsync(cancellationToken).WaitAsync(TimeSpan.FromMinutes(_configuration.ProcessTimeoutMinutes), cancellationToken);
         process.CancelErrorRead();
         process.CancelOutputRead();
         

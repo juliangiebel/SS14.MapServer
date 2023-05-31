@@ -36,7 +36,7 @@ public sealed class FileUploadService
     
     public async Task UploadGridImages(Map map, IEnumerable<IFormFile> images)
     {
-        var mapPath = Path.Combine(_configuration.GridImagesPath, map.Id);
+        var mapPath = Path.Combine(_configuration.GridImagesPath, map.MapId);
             
         //Creates the maps image directory if it doesn't exist and clears it.
         Directory.CreateDirectory(mapPath).Clear();
@@ -49,13 +49,13 @@ public sealed class FileUploadService
                 throw new ArgumentException($"One of the provided file names couldn't be parsed into a grid id: {HttpUtility.HtmlEncode(filename)}");
 
             if (!grids.TryGetValue(gridId, out var grid))
-                throw new ArgumentException($"Grid id ${gridId} not present in map ${map.Id}");
+                throw new ArgumentException($"Grid id ${gridId} not present in map ${map.MapId}");
 
             string path;
             
             if (grid.Tiled)
             {
-                path = await UploadAndProcessTiledImage(map.Id, mapPath, gridId, image, grid.TileSize);
+                path = await UploadAndProcessTiledImage(map.MapId, mapPath, gridId, image, grid.TileSize);
             }
             else
             {

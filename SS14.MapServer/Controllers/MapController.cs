@@ -67,7 +67,7 @@ namespace SS14.MapServer.Controllers
         [Produces("application/json")]
         public async Task<ActionResult<Map>> PutMap(string id, [FromForm, ModelBinder(BinderType = typeof(JsonModelBinder)), SwaggerRequestBody] Map map, IList<IFormFile> images)
         {
-            if (id != map.Id)
+            if (id != map.MapId)
                 return BadRequest("The id provided in the path and the map id don't match");
 
             if (ValidateMapRequest(map, images, out var error))
@@ -130,7 +130,7 @@ namespace SS14.MapServer.Controllers
         [Produces("application/json")]
         public async Task<ActionResult<Map>> PostMap([FromForm, ModelBinder(BinderType = typeof(JsonModelBinder))] Map map, IList<IFormFile> images)
         {
-            if (MapExists(map.Id))
+            if (MapExists(map.MapId))
                 return Conflict();
 
             if (ValidateMapRequest(map, images, out var error))
@@ -181,7 +181,7 @@ namespace SS14.MapServer.Controllers
         {
             return await _context.Maps!
                 .Include(map => map.Grids)
-                .Where(map => map.Id.Equals(id))
+                .Where(map => map.MapId.Equals(id))
                 .SingleOrDefaultAsync();
         }
 
@@ -193,12 +193,12 @@ namespace SS14.MapServer.Controllers
             _context.Maps.Add(map);
             
             await _context.SaveChangesAsync();
-            return CreatedAtAction("GetMap", new { id = map.Id }, map);
+            return CreatedAtAction("GetMap", new { id = map.MapId }, map);
         }
 
         private bool MapExists(string id)
         {
-            return (_context.Maps?.Any(e => e.Id == id)).GetValueOrDefault();
+            return (_context.Maps?.Any(e => e.MapId == id)).GetValueOrDefault();
         }
     }
 }

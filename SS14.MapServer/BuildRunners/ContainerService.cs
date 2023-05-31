@@ -2,7 +2,7 @@
 using Docker.DotNet.Models;
 using SS14.MapServer.Configuration;
 
-namespace SS14.MapServer.Services;
+namespace SS14.MapServer.BuildRunners;
 
 public sealed class ContainerService
 {
@@ -14,7 +14,7 @@ public sealed class ContainerService
         configuration.Bind("Container", _configuration);
 
         var clientConfiguration = _configuration.DockerHost != null
-            ? new DockerClientConfiguration(_configuration.DockerHost) 
+            ? new DockerClientConfiguration(_configuration.DockerHost)
             : new DockerClientConfiguration();
 
         _client = clientConfiguration.CreateClient();
@@ -24,13 +24,13 @@ public sealed class ContainerService
     {
         return await _client.System.GetVersionAsync();
     }
-    
+
     public async Task<SystemInfoResponse> GetSystemInformation()
     {
         return await _client.System.GetSystemInfoAsync();
     }
 
-    public async Task<string> BuildAndRun(string directory, string command, List<string> arguments)
+    public async Task<string> BuildAndRun(string directory, string command, List<string> arguments, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }

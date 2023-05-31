@@ -1,7 +1,7 @@
 ﻿using SixLabors.ImageSharp.Advanced;
 using SS14.MapServer.Models.Entities;
 
-namespace SS14.MapServer.Services;
+namespace SS14.MapServer.MapProcessing.Services;
 
 public sealed class ImageProcessingService
 {

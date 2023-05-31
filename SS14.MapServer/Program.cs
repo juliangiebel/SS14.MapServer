@@ -5,6 +5,8 @@ using Quartz;
 using Serilog;
 using SS14.GithubApiHelper.Services;
 using SS14.MapServer;
+using SS14.MapServer.BuildRunners;
+using SS14.MapServer.MapProcessing.Services;
 using SS14.MapServer.Models;
 using SS14.MapServer.Security;
 using SS14.MapServer.Services;
