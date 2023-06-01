@@ -17,7 +17,7 @@ public sealed class GitService
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="workingDirectory"></param>
     /// <param name="gitRef">[Optional] The Ref to pull</param>
@@ -25,20 +25,20 @@ public sealed class GitService
     public string Sync(string workingDirectory, string? gitRef = null)
     {
         gitRef ??= _configuration.Branch;
-        
+
         var repositoryName = Path.GetFileNameWithoutExtension(_configuration.RepositoryUrl);
         var repoDirectory = Path.Join(workingDirectory, repositoryName);
 
         if (!Path.IsPathRooted(repoDirectory))
             repoDirectory = Path.Join(Directory.GetCurrentDirectory(), repoDirectory);
-        
-       
+
+
         if (!Directory.Exists(repoDirectory))
             Clone(repoDirectory, gitRef);
 
         Pull(repoDirectory, gitRef);
-  
-        
+
+
         return repoDirectory;
     }
 
@@ -49,18 +49,31 @@ public sealed class GitService
         {
             RecurseSubmodules = true,
             OnProgress = LogProgress,
-            OnCheckoutProgress = (progress, _, _) => LogProgress(progress)
+            OnCheckoutProgress = (_, completed, total) => LogDownloadProgress(completed, total)
         });
-        
+
         using var repository = new Repository(repoDirectory);
         Commands.Checkout(repository, gitRef);
         _log.Information("Done cloning");
     }
-    
+
+    private void LogDownloadProgress(int completedSteps, int totalSteps)
+    {
+        if (completedSteps == 0)
+            return;
+
+        var percentage =  completedSteps / totalSteps * 100;
+
+        if (percentage % 10 != 0)
+            return;
+
+        _log.Verbose("Progress: {Percentage}%", percentage);
+    }
+
     private void Pull(string repoDirectory, string gitRef)
     {
         _log.Information( "Pulling branch/commit {Ref}...", gitRef);
-        
+
         using var repository = new Repository(repoDirectory);
         Commands.Checkout(repository, gitRef);
         var signature = repository.Config.BuildSignature(DateTimeOffset.Now);
@@ -69,7 +82,12 @@ public sealed class GitService
         {
             FetchOptions = new FetchOptions
             {
-                OnProgress = LogProgress
+                OnProgress = LogProgress,
+                OnTransferProgress = progress =>
+                {
+                    LogDownloadProgress(progress.ReceivedObjects, progress.TotalObjects);
+                    return true;
+                }
             }
         };
 
@@ -79,15 +97,20 @@ public sealed class GitService
         {
             repository.Submodules.Update(submodule.Name, new SubmoduleUpdateOptions
             {
-                OnProgress = LogProgress
+                OnProgress = LogProgress,
+                OnTransferProgress = progress =>
+                {
+                    LogDownloadProgress(progress.ReceivedObjects, progress.TotalObjects);
+                    return true;
+                }
             });
         }
-        
+
         _log.Information("Done pulling");
     }
-    
+
     private bool LogProgress(string? progress)
-    {        
+    {
         _log.Verbose("Progress: {Progress}", progress);
         return true;
     }

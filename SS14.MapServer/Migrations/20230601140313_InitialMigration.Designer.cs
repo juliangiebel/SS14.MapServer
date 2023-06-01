@@ -14,7 +14,7 @@ using SS14.MapServer.Models.Types;
 namespace SS14.MapServer.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20230511093323_InitialMigration")]
+    [Migration("20230601140313_InitialMigration")]
     partial class InitialMigration
     {
         /// <inheritdoc />
@@ -36,8 +36,8 @@ namespace SS14.MapServer.Migrations
                     b.Property<int>("GridId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("MapId")
-                        .HasColumnType("text");
+                    b.Property<Guid?>("MapId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Path")
                         .IsRequired()
@@ -56,15 +56,34 @@ namespace SS14.MapServer.Migrations
                     b.ToTable("Grid");
                 });
 
+            modelBuilder.Entity("SS14.MapServer.Models.Entities.ImageFile", b =>
+                {
+                    b.Property<string>("Path")
+                        .HasColumnType("text");
+
+                    b.Property<string>("InternalPath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Path");
+
+                    b.ToTable("Images");
+                });
+
             modelBuilder.Entity("SS14.MapServer.Models.Entities.Map", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Attribution")
                         .HasColumnType("text");
 
                     b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("MapId")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -99,6 +118,8 @@ namespace SS14.MapServer.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("MapId", "GridId", "X", "Y");
+
+                    b.HasIndex("MapId", "GridId");
 
                     b.ToTable("Tiles");
                 });

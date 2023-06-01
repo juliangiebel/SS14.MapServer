@@ -14,10 +14,23 @@ namespace SS14.MapServer.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "Images",
+                columns: table => new
+                {
+                    Path = table.Column<string>(type: "text", nullable: false),
+                    InternalPath = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Images", x => x.Path);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Maps",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "text", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    MapId = table.Column<string>(type: "text", nullable: false),
                     DisplayName = table.Column<string>(type: "text", nullable: false),
                     Attribution = table.Column<string>(type: "text", nullable: true),
                     ParallaxLayers = table.Column<List<ParallaxLayer>>(type: "jsonb", nullable: false)
@@ -58,7 +71,7 @@ namespace SS14.MapServer.Migrations
                     Extent_B_X = table.Column<float>(type: "real", nullable: false),
                     Extent_B_Y = table.Column<float>(type: "real", nullable: false),
                     Path = table.Column<string>(type: "text", nullable: false),
-                    MapId = table.Column<string>(type: "text", nullable: true)
+                    MapId = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -74,6 +87,11 @@ namespace SS14.MapServer.Migrations
                 name: "IX_Grid_MapId",
                 table: "Grid",
                 column: "MapId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tiles_MapId_GridId",
+                table: "Tiles",
+                columns: new[] { "MapId", "GridId" });
         }
 
         /// <inheritdoc />
@@ -81,6 +99,9 @@ namespace SS14.MapServer.Migrations
         {
             migrationBuilder.DropTable(
                 name: "Grid");
+
+            migrationBuilder.DropTable(
+                name: "Images");
 
             migrationBuilder.DropTable(
                 name: "Tiles");

@@ -33,8 +33,8 @@ namespace SS14.MapServer.Migrations
                     b.Property<int>("GridId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("MapId")
-                        .HasColumnType("text");
+                    b.Property<Guid?>("MapId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Path")
                         .IsRequired()
@@ -50,7 +50,7 @@ namespace SS14.MapServer.Migrations
 
                     b.HasIndex("MapId");
 
-                    b.ToTable("Grid", (string)null);
+                    b.ToTable("Grid");
                 });
 
             modelBuilder.Entity("SS14.MapServer.Models.Entities.ImageFile", b =>
@@ -64,18 +64,23 @@ namespace SS14.MapServer.Migrations
 
                     b.HasKey("Path");
 
-                    b.ToTable("Images", (string)null);
+                    b.ToTable("Images");
                 });
 
             modelBuilder.Entity("SS14.MapServer.Models.Entities.Map", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Attribution")
                         .HasColumnType("text");
 
                     b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("MapId")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -85,7 +90,7 @@ namespace SS14.MapServer.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Maps", (string)null);
+                    b.ToTable("Maps");
                 });
 
             modelBuilder.Entity("SS14.MapServer.Models.Entities.Tile", b =>
@@ -113,7 +118,7 @@ namespace SS14.MapServer.Migrations
 
                     b.HasIndex("MapId", "GridId");
 
-                    b.ToTable("Tiles", (string)null);
+                    b.ToTable("Tiles");
                 });
 
             modelBuilder.Entity("SS14.MapServer.Models.Entities.Grid", b =>
@@ -122,64 +127,7 @@ namespace SS14.MapServer.Migrations
                         .WithMany("Grids")
                         .HasForeignKey("MapId");
 
-                    b.OwnsOne("SS14.MapServer.Models.Entities.Grid.Extent#SS14.MapServer.Models.Types.Area", "Extent", b1 =>
-                        {
-                            b1.Property<Guid>("GridId")
-                                .HasColumnType("uuid");
-
-                            b1.HasKey("GridId");
-
-                            b1.ToTable("Grid", (string)null);
-
-                            b1.WithOwner()
-                                .HasForeignKey("GridId");
-
-                            b1.OwnsOne("SS14.MapServer.Models.Entities.Grid.Extent#SS14.MapServer.Models.Types.Area.A#SS14.MapServer.Models.Types.Point", "A", b2 =>
-                                {
-                                    b2.Property<Guid>("AreaGridId")
-                                        .HasColumnType("uuid");
-
-                                    b2.Property<float>("X")
-                                        .HasColumnType("real");
-
-                                    b2.Property<float>("Y")
-                                        .HasColumnType("real");
-
-                                    b2.HasKey("AreaGridId");
-
-                                    b2.ToTable("Grid", (string)null);
-
-                                    b2.WithOwner()
-                                        .HasForeignKey("AreaGridId");
-                                });
-
-                            b1.OwnsOne("SS14.MapServer.Models.Entities.Grid.Extent#SS14.MapServer.Models.Types.Area.B#SS14.MapServer.Models.Types.Point", "B", b2 =>
-                                {
-                                    b2.Property<Guid>("AreaGridId")
-                                        .HasColumnType("uuid");
-
-                                    b2.Property<float>("X")
-                                        .HasColumnType("real");
-
-                                    b2.Property<float>("Y")
-                                        .HasColumnType("real");
-
-                                    b2.HasKey("AreaGridId");
-
-                                    b2.ToTable("Grid", (string)null);
-
-                                    b2.WithOwner()
-                                        .HasForeignKey("AreaGridId");
-                                });
-
-                            b1.Navigation("A")
-                                .IsRequired();
-
-                            b1.Navigation("B")
-                                .IsRequired();
-                        });
-
-                    b.OwnsOne("SS14.MapServer.Models.Entities.Grid.Offset#SS14.MapServer.Models.Types.Point", "Offset", b1 =>
+                    b.OwnsOne("SS14.MapServer.Models.Types.Point", "Offset", b1 =>
                         {
                             b1.Property<Guid>("GridId")
                                 .HasColumnType("uuid");
@@ -192,10 +140,67 @@ namespace SS14.MapServer.Migrations
 
                             b1.HasKey("GridId");
 
-                            b1.ToTable("Grid", (string)null);
+                            b1.ToTable("Grid");
 
                             b1.WithOwner()
                                 .HasForeignKey("GridId");
+                        });
+
+                    b.OwnsOne("SS14.MapServer.Models.Types.Area", "Extent", b1 =>
+                        {
+                            b1.Property<Guid>("GridId")
+                                .HasColumnType("uuid");
+
+                            b1.HasKey("GridId");
+
+                            b1.ToTable("Grid");
+
+                            b1.WithOwner()
+                                .HasForeignKey("GridId");
+
+                            b1.OwnsOne("SS14.MapServer.Models.Types.Point", "A", b2 =>
+                                {
+                                    b2.Property<Guid>("AreaGridId")
+                                        .HasColumnType("uuid");
+
+                                    b2.Property<float>("X")
+                                        .HasColumnType("real");
+
+                                    b2.Property<float>("Y")
+                                        .HasColumnType("real");
+
+                                    b2.HasKey("AreaGridId");
+
+                                    b2.ToTable("Grid");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("AreaGridId");
+                                });
+
+                            b1.OwnsOne("SS14.MapServer.Models.Types.Point", "B", b2 =>
+                                {
+                                    b2.Property<Guid>("AreaGridId")
+                                        .HasColumnType("uuid");
+
+                                    b2.Property<float>("X")
+                                        .HasColumnType("real");
+
+                                    b2.Property<float>("Y")
+                                        .HasColumnType("real");
+
+                                    b2.HasKey("AreaGridId");
+
+                                    b2.ToTable("Grid");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("AreaGridId");
+                                });
+
+                            b1.Navigation("A")
+                                .IsRequired();
+
+                            b1.Navigation("B")
+                                .IsRequired();
                         });
 
                     b.Navigation("Extent")

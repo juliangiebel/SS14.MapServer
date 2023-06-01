@@ -1,19 +1,20 @@
 Serilog:
-  Using: [ "Serilog.Sinks.Console" ]
-  MinimumLevel:
-    Default: Verbose #Information
-    Override:
-      SS14: Verbose
+    Using: [ "Serilog.Sinks.Console" ]
+    MinimumLevel:
+        Default: Verbose #Information
+        Override:
+            SS14: Verbose
 
 DetailedErrors: true
 ConnectionStrings:
-  default: "Server=127.0.0.1;Port=5432;Database=maps;User Id=postgres;Password=postgres;"
-  
+    default: "Server=127.0.0.1;Port=5432;Database=maps;User Id=postgres;Password=postgres;"
+
 Auth:
-  ApiKey: "debug"
-  
-Git:
-  TargetDirectory: "data/git"
-  
+    ApiKey: "debug"
+
+Processing:
+    TargetDirectory: "/tmp/mapstest/build"
+    DirectoryPoolMaxSize: 1
+
 Github:
-  AppName: "SS14.MapServer"
+    AppName: "SS14.MapServer"

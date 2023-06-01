@@ -2,6 +2,8 @@
 
 namespace SS14.MapServer.MapProcessing;
 
+
+//TODO: Look at Channel<T> as an alternative to ObjectPool
 public sealed class ProcessDirectoryPool
 {
     private readonly ObjectPool<ProcessDirectory> _pool;
@@ -14,7 +16,7 @@ public sealed class ProcessDirectoryPool
     public int Count { get; private set; } = 0;
     public int MaxPoolSize { get; private set; }
     public int Available { get; private set; } = 0;
-    
+
     public ProcessDirectoryPool(string poolDirectory, int maxPoolSize)
     {
         var directoryInfo = new DirectoryInfo(poolDirectory);
@@ -45,7 +47,7 @@ public sealed class ProcessDirectoryPool
     {
         if (HasAvailable())
             return Get();
-        
+
         var completionSource = new TaskCompletionSource<ProcessDirectory>();
 
         EventHandler handler = (_, _) =>
@@ -84,11 +86,11 @@ public sealed class ProcessDirectoryPool
         {
             Available++;
         }
-        
+
         _pool.Return(directory);
         Returned?.Invoke(this, EventArgs.Empty);
     }
-    
+
     private ProcessDirectory Get()
     {
         if (!HasAvailable())
@@ -105,7 +107,7 @@ public sealed class ProcessDirectoryPool
 
         return _pool.Get();
     }
-    
+
     private class ProcessDirectoryPoolPolicy : IPooledObjectPolicy<ProcessDirectory>
     {
         private readonly DirectoryInfo _poolDirectory;

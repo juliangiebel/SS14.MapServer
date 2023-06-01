@@ -36,6 +36,9 @@ builder.Services.AddSingleton<ContainerService>();
 builder.Services.AddSingleton<LocalBuildService>();
 builder.Services.AddSingleton<GitService>();
 builder.Services.AddSingleton<StartupCheckService>();
+builder.Services.AddSingleton<ProcessQueue>();
+
+builder.Services.AddHostedService<ProcessQueueHostedService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c => {
@@ -48,13 +51,13 @@ builder.Services.AddSwaggerGen(c => {
         Name = ApiKeyHandler.HeaderName,
         In = ParameterLocation.Header
     });
-    
+
     c.SwaggerGeneratorOptions.OperationFilters.Add(new ExcludeAnonymousSecurityFilter());
 });
 
 //Security
 builder.Services.AddAuthentication(ApiKeyHandler.Name).AddScheme<ApiKeyOptions, ApiKeyHandler>(
-    ApiKeyHandler.Name, 
+    ApiKeyHandler.Name,
     options => builder.Configuration.Bind("Auth", options)
     );
 
@@ -114,7 +117,7 @@ namespace SS14.MapServer
         public void Apply(OpenApiOperation operation, OperationFilterContext context)
         {
             var methodName = context.MethodInfo.Name;
-        
+
             if (methodName != "PostMap" && methodName != "PutMap")
                 return;
 
@@ -126,25 +129,25 @@ namespace SS14.MapServer
 
             if(!type.Encoding.TryGetValue("images", out var imageEncoding))
                 return;
-        
+
             var mapEncoding = new OpenApiEncoding
             {
-                Style = ParameterStyle.Form 
+                Style = ParameterStyle.Form
             };
-        
+
             type.Encoding.Clear();
             type.Encoding.Add("image", imageEncoding);
             type.Encoding.Add("map", mapEncoding);
-        
+
             var mapParameter = new OpenApiSchema
             {
                 Type = "string"
             };
-        
+
             type.Schema.Properties.Clear();
             type.Schema.Properties.Add("images", imagesParameter);
             type.Schema.Properties.Add("map", mapParameter);
-        
+
             type.Schema.Required.Clear();
         }
     }
