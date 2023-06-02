@@ -22,19 +22,13 @@ public class ImageController : ControllerBase
 {
     private const int MinWidth = 32;
 
-    private readonly CacheConfiguration _cacheConfiguration = new();
-
     private readonly Context _context;
     private readonly FileUploadService _fileUploadService;
-    private readonly IDistributedCache _cache;
 
-    public ImageController(Context context, FileUploadService fileUploadService, IDistributedCache cache, IConfiguration configuration)
+    public ImageController(Context context, FileUploadService fileUploadService)
     {
         _context = context;
         _fileUploadService = fileUploadService;
-        _cache = cache;
-
-        configuration.Bind(CacheConfiguration.Name, _cacheConfiguration);
     }
 
     [ResponseCache(CacheProfileName = "Default")]
