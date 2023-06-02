@@ -23,12 +23,6 @@ builder.Configuration.AddYamlFile("appsettings.Secret.yaml", true, true);
 
 // Add services to the container.
 builder.Services.AddResponseCaching();
-
-builder.Services.AddDistributedMemoryCache(options =>
-{
-    options.SizeLimit = 10000000;
-});
-
 builder.Services.AddControllers(options =>
 {
     options.CacheProfiles.Add("Default", new CacheProfile()
