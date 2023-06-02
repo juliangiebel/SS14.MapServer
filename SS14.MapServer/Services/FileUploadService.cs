@@ -14,7 +14,7 @@ public sealed class FileUploadService
 {
     private readonly FilePathsConfiguration _configuration = new();
     private readonly IJobSchedulingService _schedulingService;
-    
+
     public FileUploadService(IConfiguration configuration, IJobSchedulingService schedulingService)
     {
         _schedulingService = schedulingService;
@@ -25,7 +25,7 @@ public sealed class FileUploadService
     {
         if (ValidateImageFile(file, out var message))
             throw new ArgumentException(message);
-        
+
         var filename = $"upload_{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
         path ??= Path.Combine(_configuration.ImagesPath, filename);
 
@@ -33,14 +33,14 @@ public sealed class FileUploadService
         await file.CopyToAsync(stream);
         image.InternalPath = path;
     }
-    
-    public async Task UploadGridImages(Map map, IEnumerable<IFormFile> images)
+
+    public async Task UploadGridImages(string gitRef, Map map, IEnumerable<IFormFile> images)
     {
-        var mapPath = Path.Combine(_configuration.GridImagesPath, map.MapId);
-            
+        var mapPath = Path.Combine(_configuration.GridImagesPath, gitRef, map.MapId);
+
         //Creates the maps image directory if it doesn't exist and clears it.
         Directory.CreateDirectory(mapPath).Clear();
-        var grids = map.Grids.ToDictionary(grid => grid.GridId, grid => grid); 
+        var grids = map.Grids.ToDictionary(grid => grid.GridId, grid => grid);
 
         foreach (var image in images)
         {
@@ -52,20 +52,20 @@ public sealed class FileUploadService
                 throw new ArgumentException($"Grid id ${gridId} not present in map ${map.MapId}");
 
             string path;
-            
+
             if (grid.Tiled)
             {
-                path = await UploadAndProcessTiledImage(map.MapId, mapPath, gridId, image, grid.TileSize);
+                path = await UploadAndProcessTiledImage(map.MapGuid, mapPath, gridId, image, grid.TileSize);
             }
             else
             {
                 path = await UploadGridImage(mapPath, gridId, image);
             }
-            
+
             grid.Path = path;
         }
     }
-    
+
     public bool ValidateImageFile(IFormFile image, [NotNullWhen(true)] out string? message)
     {
         var extension = Path.GetExtension(image.FileName);
@@ -74,7 +74,7 @@ public sealed class FileUploadService
             message = $"Mime type not found for file extension {extension}";
             return true;
         }
-        
+
         if (!_configuration.AllowedMimeTypes.Contains(mimeType))
         {
             message = $"Mime type not {mimeType} not allowed";
@@ -84,12 +84,12 @@ public sealed class FileUploadService
         message = null;
         return false;
     }
-    
+
     private async Task<string> UploadGridImage(string mapPath, int gridId, IFormFile image)
     {
         if (ValidateImageFile(image, out var message))
             throw new ArgumentException(message);
-        
+
         var name = $"{gridId}{Path.GetExtension(image.FileName)}";
         var path = Path.Combine(mapPath, name);
 
@@ -98,25 +98,25 @@ public sealed class FileUploadService
         return path;
     }
 
-    private async Task<string> UploadAndProcessTiledImage(string mapId, string mapPath, int gridId, IFormFile image, int tileSize)
+    private async Task<string> UploadAndProcessTiledImage(Guid mapGuid, string mapPath, int gridId, IFormFile image, int tileSize)
     {
         if (ValidateImageFile(image, out var message))
             throw new ArgumentException(message);
-        
+
         var sourcePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}{Path.GetExtension(image.FileName)}");
         var targetPath = Path.Combine(mapPath, "tiles", gridId.ToString());
-        
+
         await using var stream = File.Create(sourcePath);
         await image.CopyToAsync(stream);
 
-        var processingOptions = new ProcessTiledImage.ProcessingOptions(mapId, gridId, sourcePath, targetPath, tileSize, true);
+        var processingOptions = new ProcessTiledImage.ProcessingOptions(mapGuid, gridId, sourcePath, targetPath, tileSize, true);
         var data = new JobDataMap
         {
             {ProcessTiledImage.ProcessOptionsKey, processingOptions}
         };
 
         await _schedulingService.RunJob<ProcessTiledImage>(nameof(ProcessTiledImage), "Processing", data);
-        
+
         return targetPath;
     }
 }

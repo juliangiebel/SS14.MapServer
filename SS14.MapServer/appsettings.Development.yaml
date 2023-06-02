@@ -14,7 +14,7 @@ Auth:
 
 Processing:
     TargetDirectory: "/tmp/mapstest/build"
-    DirectoryPoolMaxSize: 1
+    DirectoryPoolMaxSize: 3
 
 Github:
     AppName: "SS14.MapServer"

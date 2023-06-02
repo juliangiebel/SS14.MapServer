@@ -24,7 +24,7 @@ public sealed class MapReaderServiceService : IMapReaderService
         configuration.Bind(BuildConfiguration.Name, _buildConfiguration);
     }
 
-    public async Task<IList<Guid>> UpdateMapsFromFs(string path, CancellationToken cancellationToken = default)
+    public async Task<IList<Guid>> UpdateMapsFromFs(string path, string gitRef = "master", CancellationToken cancellationToken = default)
     {
         if (!Directory.Exists(path))
             throw new DirectoryNotFoundException($"Map import path not found: {path}");
@@ -51,7 +51,7 @@ public sealed class MapReaderServiceService : IMapReaderService
 
             var map = await _context.Maps?
                 .Include(e => e.Grids)
-                .SingleOrDefaultAsync(e => e.MapId == data.Id, cancellationToken)!;
+                .SingleOrDefaultAsync(e => e.GitRef == gitRef && e.MapId == data.Id, cancellationToken)!;
 
             var newMap = false;
 
@@ -61,6 +61,7 @@ public sealed class MapReaderServiceService : IMapReaderService
                 newMap = true;
             }
 
+            map.GitRef = gitRef;
             map.MapId = data.Id;
             map.DisplayName = data.DisplayName;
             map.Attribution = data.Attribution;
@@ -96,7 +97,7 @@ public sealed class MapReaderServiceService : IMapReaderService
                 _context.Add(grid);
             }
 
-            await _fileUploadService.UploadGridImages(map, gridImages);
+            await _fileUploadService.UploadGridImages(gitRef, map, gridImages);
 
             foreach (var stream in streams)
             {
@@ -105,8 +106,12 @@ public sealed class MapReaderServiceService : IMapReaderService
 
             if (newMap)
             {
-                var id = (await _context.Maps.AddAsync(map, cancellationToken)).Entity.Id;
+                var id = (await _context.Maps.AddAsync(map, cancellationToken)).Entity.MapGuid;
                 ids.Add(id);
+            }
+            else
+            {
+                ids.Add(map.MapGuid);
             }
 
             await _context.SaveChangesAsync(cancellationToken);

@@ -5,10 +5,16 @@ using SS14.MapServer.Models.Types;
 
 namespace SS14.MapServer.Models.Entities;
 
+[Index(nameof(GitRef), nameof(MapId))]
 public class Map
 {
+    /// <summary>
+    /// The internal map id. Named MapGuid to prevent ambiguity wit MapId if it where just called Id
+    /// </summary>
     [Key]
-    public Guid Id { get; set; }
+    public Guid MapGuid { get; set; }
+    [Required]
+    public string GitRef { get; set; } = default!;
     [Required]
     public string MapId { get; set; } = default!;
     [Required]

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Quartz;
@@ -21,7 +22,21 @@ builder.Configuration.AddYamlFile($"appsettings.{builder.Environment.Environment
 builder.Configuration.AddYamlFile("appsettings.Secret.yaml", true, true);
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddResponseCaching();
+
+builder.Services.AddDistributedMemoryCache(options =>
+{
+    options.SizeLimit = 10000000;
+});
+
+builder.Services.AddControllers(options =>
+{
+    options.CacheProfiles.Add("Default", new CacheProfile()
+    {
+        Duration = 60
+    });
+});
+
 builder.Services.AddDbContext<Context>(opt => opt.UseNpgsql(builder.Configuration.GetConnectionString("default")));
 
 builder.Services.AddScoped<FileUploadService>();
@@ -77,7 +92,6 @@ builder.Services.AddQuartzServer(q => { q.WaitForJobsToComplete = true; });
 builder.Host.UseSerilog((ctx, cfg) => cfg.ReadFrom.Configuration(ctx.Configuration));
 builder.Logging.AddSerilog();
 
-
 var app = builder.Build();
 
 //Preflight Checks
@@ -99,6 +113,8 @@ if (app.Environment.IsDevelopment())
 }
 
 //app.UseHttpsRedirection();
+
+app.UseResponseCaching();
 
 app.UseAuthentication();
 app.UseAuthorization();

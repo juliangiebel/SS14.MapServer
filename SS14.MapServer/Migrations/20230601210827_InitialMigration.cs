@@ -29,7 +29,8 @@ namespace SS14.MapServer.Migrations
                 name: "Maps",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    MapGuid = table.Column<Guid>(type: "uuid", nullable: false),
+                    GitRef = table.Column<string>(type: "text", nullable: false),
                     MapId = table.Column<string>(type: "text", nullable: false),
                     DisplayName = table.Column<string>(type: "text", nullable: false),
                     Attribution = table.Column<string>(type: "text", nullable: true),
@@ -37,14 +38,14 @@ namespace SS14.MapServer.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Maps", x => x.Id);
+                    table.PrimaryKey("PK_Maps", x => x.MapGuid);
                 });
 
             migrationBuilder.CreateTable(
                 name: "Tiles",
                 columns: table => new
                 {
-                    MapId = table.Column<string>(type: "text", nullable: false),
+                    MapGuid = table.Column<Guid>(type: "uuid", nullable: false),
                     GridId = table.Column<int>(type: "integer", nullable: false),
                     X = table.Column<int>(type: "integer", nullable: false),
                     Y = table.Column<int>(type: "integer", nullable: false),
@@ -53,7 +54,7 @@ namespace SS14.MapServer.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Tiles", x => new { x.MapId, x.GridId, x.X, x.Y });
+                    table.PrimaryKey("PK_Tiles", x => new { x.MapGuid, x.GridId, x.X, x.Y });
                 });
 
             migrationBuilder.CreateTable(
@@ -71,27 +72,32 @@ namespace SS14.MapServer.Migrations
                     Extent_B_X = table.Column<float>(type: "real", nullable: false),
                     Extent_B_Y = table.Column<float>(type: "real", nullable: false),
                     Path = table.Column<string>(type: "text", nullable: false),
-                    MapId = table.Column<Guid>(type: "uuid", nullable: true)
+                    MapGuid = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Grid", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Grid_Maps_MapId",
-                        column: x => x.MapId,
+                        name: "FK_Grid_Maps_MapGuid",
+                        column: x => x.MapGuid,
                         principalTable: "Maps",
-                        principalColumn: "Id");
+                        principalColumn: "MapGuid");
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Grid_MapId",
+                name: "IX_Grid_MapGuid",
                 table: "Grid",
-                column: "MapId");
+                column: "MapGuid");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tiles_MapId_GridId",
+                name: "IX_Maps_GitRef_MapId",
+                table: "Maps",
+                columns: new[] { "GitRef", "MapId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tiles_MapGuid_GridId",
                 table: "Tiles",
-                columns: new[] { "MapId", "GridId" });
+                columns: new[] { "MapGuid", "GridId" });
         }
 
         /// <inheritdoc />

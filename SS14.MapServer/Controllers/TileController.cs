@@ -17,18 +17,19 @@ public class TileController : ControllerBase
     {
         _context = context;
     }
-    
+
+    [ResponseCache(CacheProfileName = "Default")]
     [AllowAnonymous]
     [Produces("image/jpg", "image/png", "image/webp", "application/json")]
     [ProducesResponseType(200, Type = typeof(FileStreamResult))]
-    [HttpGet("{id}/{gridId:int}/{x:int}/{y:int}/{z:int}")]
-    public async Task<IActionResult> GetTile(string id, int gridId, int x, int y, int z)
+    [HttpGet("{id:guid}/{gridId:int}/{x:int}/{y:int}/{z:int}")]
+    public async Task<IActionResult> GetTile(Guid id, int gridId, int x, int y, int z)
     {
         var map = await _context.Maps!
             .Include(map => map.Grids)
-            .Where(map => map.MapId.Equals(id))
+            .Where(map => map.MapGuid.Equals(id))
             .SingleOrDefaultAsync();
-        
+
         if (map == null)
             return new NotFoundResult();
 
@@ -43,10 +44,10 @@ public class TileController : ControllerBase
 
         if (tile == null || !System.IO.File.Exists(grid.Path))
             return new NotFoundResult();
-        
+
         var file = new FileStream(tile.Path, FileMode.Open);
         var mimeType = MimeTypeMap.GetMimeType(Path.GetExtension(tile.Path));
-        
+
         return File(file, mimeType, Path.GetFileName(tile.Path));
     }
 }

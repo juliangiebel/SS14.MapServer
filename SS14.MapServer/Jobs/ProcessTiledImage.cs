@@ -25,11 +25,11 @@ public class ProcessTiledImage : IJob
 
         if (dataMap.Get(ProcessOptionsKey) is not ProcessingOptions options)
             throw new JobExecutionException($"Job data value with key ${ProcessOptionsKey} and type ProcessingOptions is missing");
-        
+
         var tiles = await _processingService.TileImage(
-            options.MapId, 
-            options.GridId, 
-            options.SourcePath, 
+            options.MapGuid,
+            options.GridId,
+            options.SourcePath,
             options.TargetPath,
             options.TileSize
             );
@@ -46,12 +46,12 @@ public class ProcessTiledImage : IJob
             }
         }
 
-        await _dbContext.Tiles!.Where(tile => tile.MapId.Equals(options.MapId) && tile.GridId.Equals(options.GridId))
+        await _dbContext.Tiles!.Where(tile => tile.MapGuid.Equals(options.MapGuid) && tile.GridId.Equals(options.GridId))
             .ExecuteDeleteAsync();
 
         _dbContext.Tiles!.AddRange(tiles);
         await _dbContext.SaveChangesAsync();
     }
 
-    public record ProcessingOptions(string MapId, int GridId, string SourcePath, string TargetPath, int TileSize, bool removeSource);
+    public record ProcessingOptions(Guid MapGuid, int GridId, string SourcePath, string TargetPath, int TileSize, bool removeSource);
 }

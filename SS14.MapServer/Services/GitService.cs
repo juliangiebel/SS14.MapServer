@@ -48,26 +48,12 @@ public sealed class GitService
         var repoDirectory = Repository.Clone(_configuration.RepositoryUrl, directory, new CloneOptions
         {
             RecurseSubmodules = true,
-            OnProgress = LogProgress,
-            OnCheckoutProgress = (_, completed, total) => LogDownloadProgress(completed, total)
+            OnProgress = LogProgress
         });
 
         using var repository = new Repository(repoDirectory);
         Commands.Checkout(repository, gitRef);
         _log.Information("Done cloning");
-    }
-
-    private void LogDownloadProgress(int completedSteps, int totalSteps)
-    {
-        if (completedSteps == 0)
-            return;
-
-        var percentage =  completedSteps / totalSteps * 100;
-
-        if (percentage % 10 != 0)
-            return;
-
-        _log.Verbose("Progress: {Percentage}%", percentage);
     }
 
     private void Pull(string repoDirectory, string gitRef)
@@ -82,12 +68,7 @@ public sealed class GitService
         {
             FetchOptions = new FetchOptions
             {
-                OnProgress = LogProgress,
-                OnTransferProgress = progress =>
-                {
-                    LogDownloadProgress(progress.ReceivedObjects, progress.TotalObjects);
-                    return true;
-                }
+                OnProgress = LogProgress
             }
         };
 
@@ -97,12 +78,7 @@ public sealed class GitService
         {
             repository.Submodules.Update(submodule.Name, new SubmoduleUpdateOptions
             {
-                OnProgress = LogProgress,
-                OnTransferProgress = progress =>
-                {
-                    LogDownloadProgress(progress.ReceivedObjects, progress.TotalObjects);
-                    return true;
-                }
+                OnProgress = LogProgress
             });
         }
 

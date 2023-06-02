@@ -2,20 +2,20 @@
 
 namespace SS14.MapServer.Models.Entities;
 
-[PrimaryKey(nameof(MapId), nameof(GridId), nameof(X), nameof(Y))]
-[Index(nameof(MapId), nameof(GridId))]
+[PrimaryKey(nameof(MapGuid), nameof(GridId), nameof(X), nameof(Y))]
+[Index(nameof(MapGuid), nameof(GridId))]
 public class Tile
 {
-    public string MapId { get; set; }
+    public Guid MapGuid { get; set; }
     public int GridId { get; set; }
     public int X { get; set; }
     public int Y { get; set; }
     public int Size { get; set; }
     public string Path { get; set; }
 
-    public Tile(string mapId, int gridId, int x, int y, int size, string path)
+    public Tile(Guid mapGuid, int gridId, int x, int y, int size, string path)
     {
-        MapId = mapId;
+        MapGuid = mapGuid;
         GridId = gridId;
         X = x;
         Y = y;

@@ -33,7 +33,7 @@ namespace SS14.MapServer.Migrations
                     b.Property<int>("GridId")
                         .HasColumnType("integer");
 
-                    b.Property<Guid?>("MapId")
+                    b.Property<Guid?>("MapGuid")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Path")
@@ -48,7 +48,7 @@ namespace SS14.MapServer.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MapId");
+                    b.HasIndex("MapGuid");
 
                     b.ToTable("Grid");
                 });
@@ -69,7 +69,7 @@ namespace SS14.MapServer.Migrations
 
             modelBuilder.Entity("SS14.MapServer.Models.Entities.Map", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("MapGuid")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
@@ -77,6 +77,10 @@ namespace SS14.MapServer.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("GitRef")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -88,15 +92,17 @@ namespace SS14.MapServer.Migrations
                         .IsRequired()
                         .HasColumnType("jsonb");
 
-                    b.HasKey("Id");
+                    b.HasKey("MapGuid");
+
+                    b.HasIndex("GitRef", "MapId");
 
                     b.ToTable("Maps");
                 });
 
             modelBuilder.Entity("SS14.MapServer.Models.Entities.Tile", b =>
                 {
-                    b.Property<string>("MapId")
-                        .HasColumnType("text");
+                    b.Property<Guid>("MapGuid")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("GridId")
                         .HasColumnType("integer");
@@ -114,9 +120,9 @@ namespace SS14.MapServer.Migrations
                     b.Property<int>("Size")
                         .HasColumnType("integer");
 
-                    b.HasKey("MapId", "GridId", "X", "Y");
+                    b.HasKey("MapGuid", "GridId", "X", "Y");
 
-                    b.HasIndex("MapId", "GridId");
+                    b.HasIndex("MapGuid", "GridId");
 
                     b.ToTable("Tiles");
                 });
@@ -125,7 +131,7 @@ namespace SS14.MapServer.Migrations
                 {
                     b.HasOne("SS14.MapServer.Models.Entities.Map", null)
                         .WithMany("Grids")
-                        .HasForeignKey("MapId");
+                        .HasForeignKey("MapGuid");
 
                     b.OwnsOne("SS14.MapServer.Models.Types.Point", "Offset", b1 =>
                         {

@@ -41,10 +41,10 @@ namespace SS14.MapServer.Controllers
 
             return await _context.Maps.Include(map => map.Grids).ToListAsync();
         }
-        
+
         [AllowAnonymous]
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Map>> GetMap(string id)
+        [HttpGet("{id:guid}")]
+        public async Task<ActionResult<Map>> GetMap(Guid id)
         {
             if (_context.Maps == null)
             {
@@ -60,22 +60,38 @@ namespace SS14.MapServer.Controllers
             return map;
         }
 
-        // PUT: api/Map/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
+        [AllowAnonymous]
+        [HttpGet("{id}/{gitRef}")]
+        public async Task<ActionResult<Map>> GetMap(string id, string gitRef)
+        {
+            if (_context.Maps == null)
+            {
+                return NotFound();
+            }
+            var map = await FindMapWithGrids(id, gitRef);
+
+            if (map == null)
+            {
+                return NotFound();
+            }
+
+            return map;
+        }
+
+        [HttpPut("{id}/{gitRef}")]
         [Consumes("multipart/form-data")]
         [Produces("application/json")]
-        public async Task<ActionResult<Map>> PutMap(string id, [FromForm, ModelBinder(BinderType = typeof(JsonModelBinder)), SwaggerRequestBody] Map map, IList<IFormFile> images)
+        public async Task<ActionResult<Map>> PutMap(string id, string gitRef, [FromForm, ModelBinder(BinderType = typeof(JsonModelBinder)), SwaggerRequestBody] Map map, IList<IFormFile> images)
         {
             if (id != map.MapId)
                 return BadRequest("The id provided in the path and the map id don't match");
 
             if (ValidateMapRequest(map, images, out var error))
                 return error;
-            
-            await _fileUploadService.UploadGridImages(map, images);
-            
-            if (!MapExists(id))
+
+            await _fileUploadService.UploadGridImages(gitRef, map, images);
+
+            if (!MapExists(id, gitRef))
                 return await CreateMap(map);
 
             _context.Entry(map).State = EntityState.Modified;
@@ -84,20 +100,12 @@ namespace SS14.MapServer.Controllers
             {
                 _context.Entry(grid).State = EntityState.Modified;
             }
-            
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                throw;
-            }
 
+            await _context.SaveChangesAsync();
             return NoContent();
         }
 
-        private bool ValidateMapRequest(Map map, IList<IFormFile> images, [NotNullWhen(true)] out BadRequestObjectResult? error)
+        private bool ValidateMapRequest(Map map, ICollection<IFormFile> images, [NotNullWhen(true)] out BadRequestObjectResult? error)
         {
             if (map.Grids.Count != images.Count)
             {
@@ -123,36 +131,52 @@ namespace SS14.MapServer.Controllers
             return false;
         }
 
-        // POST: api/Map
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         [Consumes("multipart/form-data")]
         [Produces("application/json")]
         public async Task<ActionResult<Map>> PostMap([FromForm, ModelBinder(BinderType = typeof(JsonModelBinder))] Map map, IList<IFormFile> images)
         {
-            if (MapExists(map.MapId))
+            if (MapExists(map.MapGuid))
                 return Conflict();
 
             if (ValidateMapRequest(map, images, out var error))
                 return error;
-            
+
             var result = await CreateMap(map);
 
             if (result.Value != null)
-                await _fileUploadService.UploadGridImages(result.Value, images);
-                
+                await _fileUploadService.UploadGridImages(map.GitRef, result.Value, images);
+
             return result;
         }
 
-        // DELETE: api/Map/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteMap(string id)
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> DeleteMap(Guid id)
         {
             if (_context.Maps == null)
             {
                 return NotFound();
             }
             var map = await _context.Maps.FindAsync(id);
+            if (map == null)
+            {
+                return NotFound();
+            }
+
+            _context.Maps.Remove(map);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}/{gitRef}")]
+        public async Task<IActionResult> DeleteMap(string id, string gitRef)
+        {
+            if (_context.Maps == null)
+            {
+                return NotFound();
+            }
+            var map = await _context.Maps.SingleOrDefaultAsync(map => map.GitRef == gitRef && map.MapId == id);
             if (map == null)
             {
                 return NotFound();
@@ -172,16 +196,24 @@ namespace SS14.MapServer.Controllers
             {
                 {Jobs.SyncMaps.MapListKey, mapFileNames}
             };
-            
+
             await _schedulingService.RunJob<Jobs.SyncMaps>(nameof(Jobs.SyncMaps), "Sync", data);
             return Ok();
         }
 
-        private async Task<Map?> FindMapWithGrids(string id)
+        private async Task<Map?> FindMapWithGrids(string id, string gitRef)
         {
             return await _context.Maps!
                 .Include(map => map.Grids)
-                .Where(map => map.MapId.Equals(id))
+                .Where(map => map.GitRef == gitRef && map.MapId == id)
+                .SingleOrDefaultAsync();
+        }
+
+        private async Task<Map?> FindMapWithGrids(Guid id)
+        {
+            return await _context.Maps!
+                .Include(map => map.Grids)
+                .Where(map => map.MapGuid.Equals(id))
                 .SingleOrDefaultAsync();
         }
 
@@ -191,14 +223,19 @@ namespace SS14.MapServer.Controllers
                 return Problem("Entity set 'Context.Maps'  is null.");
 
             _context.Maps.Add(map);
-            
+
             await _context.SaveChangesAsync();
             return CreatedAtAction("GetMap", new { id = map.MapId }, map);
         }
 
-        private bool MapExists(string id)
+        private bool MapExists(string id, string gitRef)
         {
-            return (_context.Maps?.Any(e => e.MapId == id)).GetValueOrDefault();
+            return (_context.Maps?.Any(e => e.GitRef == gitRef && e.MapId == id)).GetValueOrDefault();
+        }
+
+        private bool MapExists(Guid id)
+        {
+            return (_context.Maps?.Any(e => e.MapGuid == id)).GetValueOrDefault();
         }
     }
 }

@@ -8,7 +8,7 @@ public static class UpsertTileExtension
     public static void Upsert(this DbSet<Tile> tiles, Tile tile)
     {
         tiles.FromSql($@"
-            Insert Into ""Tiles""  values ({tile.MapId}, {tile.GridId}, {tile.X}, {tile.Y}, {tile.Path}, {tile.Size})
+            Insert Into ""Tiles""  values ({tile.MapGuid}, {tile.GridId}, {tile.X}, {tile.Y}, {tile.Path}, {tile.Size})
             on conflict on constraint ""PK_Tiles""
             do update set 
             ""Path"" = {tile.Path},
