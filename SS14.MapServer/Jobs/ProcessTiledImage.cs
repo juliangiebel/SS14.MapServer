@@ -46,10 +46,10 @@ public class ProcessTiledImage : IJob
             }
         }
 
-        await _dbContext.Tiles!.Where(tile => tile.MapGuid.Equals(options.MapGuid) && tile.GridId.Equals(options.GridId))
+        await _dbContext.Tile!.Where(tile => tile.MapGuid.Equals(options.MapGuid) && tile.GridId.Equals(options.GridId))
             .ExecuteDeleteAsync();
 
-        _dbContext.Tiles!.AddRange(tiles);
+        _dbContext.Tile!.AddRange(tiles);
         await _dbContext.SaveChangesAsync();
     }
 

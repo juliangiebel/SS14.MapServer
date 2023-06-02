@@ -1,14 +1,11 @@
-﻿using System.Configuration;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Net.Mime;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Net.Http.Headers;
 using MimeTypes;
 using Serilog;
-using SixLabors.ImageSharp.Advanced;
-using SixLabors.ImageSharp.Processing.Processors.Transforms;
-using SS14.MapServer.Configuration;
 using SS14.MapServer.Exceptions;
 using SS14.MapServer.Models;
 using SS14.MapServer.Models.Entities;
@@ -20,8 +17,6 @@ namespace SS14.MapServer.Controllers;
 [ApiController]
 public class ImageController : ControllerBase
 {
-    private const int MinWidth = 32;
-
     private readonly Context _context;
     private readonly FileUploadService _fileUploadService;
 
@@ -31,14 +26,14 @@ public class ImageController : ControllerBase
         _fileUploadService = fileUploadService;
     }
 
-    [ResponseCache(CacheProfileName = "Default")]
     [AllowAnonymous]
+    [ResponseCache(CacheProfileName = "Default")]
+    [HttpGet("grid/{id:guid}/{gridId:int}")]
     [Produces("image/jpg", "image/png", "image/webp", "application/json")]
     [ProducesResponseType(200, Type = typeof(FileStreamResult))]
-    [HttpGet("grid/{id:guid}/{gridId:int}")]
     public async Task<IActionResult> GetGridImage(Guid id, int gridId)
     {
-        var map = await _context.Maps!
+        var map = await _context.Map!
             .Include(map => map.Grids)
             .Where(map => map.MapGuid.Equals(id))
             .SingleOrDefaultAsync();
@@ -46,14 +41,14 @@ public class ImageController : ControllerBase
         return InternalGetMap(map, gridId);
     }
 
-    [ResponseCache(CacheProfileName = "Default")]
     [AllowAnonymous]
-    [Produces("image/jpg", "image/png", "image/webp", "application/json")]
-    [ProducesResponseType(200, Type = typeof(FileStreamResult))]
+    [ResponseCache(CacheProfileName = "Default")]
     [HttpGet("grid/{id}/{gitRef}/{gridId:int}")]
+    [ProducesResponseType(200, Type = typeof(FileStreamResult))]
+    [Produces("image/jpg", "image/png", "image/webp", "application/json")]
     public async Task<IActionResult> GetGridImage(string id, string gitRef, int gridId)
     {
-        var map = await _context.Maps!
+        var map = await _context.Map!
             .Include(map => map.Grids)
             .Where(map => map.GitRef.Equals(gitRef) && map.MapId.Equals(id))
             .SingleOrDefaultAsync();
@@ -61,15 +56,15 @@ public class ImageController : ControllerBase
         return InternalGetMap(map, gridId);
     }
 
-    [Consumes("multipart/form-data")]
     [HttpPost("upload/{*path}")]
+    [Consumes("multipart/form-data")]
     [SuppressMessage("ReSharper", "UseObjectOrCollectionInitializer")]
     public async Task<IActionResult> UploadImage(string path, IFormFile file)
     {
         if (_fileUploadService.ValidateImageFile(file, out var message))
             return new BadRequestObjectResult(new ApiErrorMessage(message));
 
-        var image = await _context.Images!.FindAsync(path);
+        var image = await _context.Image!.FindAsync(path);
 
         if (image == null)
         {
@@ -86,14 +81,14 @@ public class ImageController : ControllerBase
         return new OkResult();
     }
 
-    [ResponseCache(CacheProfileName = "Default")]
     [AllowAnonymous]
+    [HttpGet("file/{*path}")]
+    [ResponseCache(CacheProfileName = "Default")]
     [Produces("image/jpg", "image/png", "image/webp")]
     [ProducesResponseType(200, Type = typeof(FileStreamResult))]
-    [HttpGet("file/{*path}")]
     public async Task<IActionResult> GetImage(string path)
     {
-        var image = await _context.Images!.FindAsync(path);
+        var image = await _context.Image!.FindAsync(path);
 
         if (image == null)
             return new NotFoundResult();
@@ -106,7 +101,9 @@ public class ImageController : ControllerBase
 
         var file = new FileStream(image.InternalPath, FileMode.Open);
         var mimeType = MimeTypeMap.GetMimeType(Path.GetExtension(image.InternalPath));
-        return File(file, mimeType, Path.GetFileName(image.InternalPath));
+
+        //Setting the file name causes the content-disposition be set to attachment which isn't really what I want
+        return File(file, mimeType, true/*, Path.GetFileName(image.InternalPath)*/);
     }
 
     private IActionResult InternalGetMap(Map? map, int gridId)
@@ -126,6 +123,8 @@ public class ImageController : ControllerBase
 
         var file = new FileStream(grid.Path, FileMode.Open);
         var mimeType = MimeTypeMap.GetMimeType(Path.GetExtension(grid.Path));
-        return File(file, mimeType, Path.GetFileName(grid.Path));
+
+        //Setting the file name causes the content-disposition be set to attachment which isn't really what I want
+        return File(file, mimeType, true/*, Path.GetFileName(grid.Path)*/);
     }
 }

@@ -14,19 +14,20 @@ namespace SS14.MapServer.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Images",
+                name: "Image",
                 columns: table => new
                 {
                     Path = table.Column<string>(type: "text", nullable: false),
-                    InternalPath = table.Column<string>(type: "text", nullable: false)
+                    InternalPath = table.Column<string>(type: "text", nullable: false),
+                    LastUpdated = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Images", x => x.Path);
+                    table.PrimaryKey("PK_Image", x => x.Path);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Maps",
+                name: "Map",
                 columns: table => new
                 {
                     MapGuid = table.Column<Guid>(type: "uuid", nullable: false),
@@ -34,15 +35,16 @@ namespace SS14.MapServer.Migrations
                     MapId = table.Column<string>(type: "text", nullable: false),
                     DisplayName = table.Column<string>(type: "text", nullable: false),
                     Attribution = table.Column<string>(type: "text", nullable: true),
-                    ParallaxLayers = table.Column<List<ParallaxLayer>>(type: "jsonb", nullable: false)
+                    ParallaxLayers = table.Column<List<ParallaxLayer>>(type: "jsonb", nullable: false),
+                    LastUpdated = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Maps", x => x.MapGuid);
+                    table.PrimaryKey("PK_Map", x => x.MapGuid);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Tiles",
+                name: "Tile",
                 columns: table => new
                 {
                     MapGuid = table.Column<Guid>(type: "uuid", nullable: false),
@@ -54,7 +56,7 @@ namespace SS14.MapServer.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Tiles", x => new { x.MapGuid, x.GridId, x.X, x.Y });
+                    table.PrimaryKey("PK_Tile", x => new { x.MapGuid, x.GridId, x.X, x.Y });
                 });
 
             migrationBuilder.CreateTable(
@@ -78,9 +80,9 @@ namespace SS14.MapServer.Migrations
                 {
                     table.PrimaryKey("PK_Grid", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Grid_Maps_MapGuid",
+                        name: "FK_Grid_Map_MapGuid",
                         column: x => x.MapGuid,
-                        principalTable: "Maps",
+                        principalTable: "Map",
                         principalColumn: "MapGuid");
                 });
 
@@ -90,14 +92,39 @@ namespace SS14.MapServer.Migrations
                 column: "MapGuid");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Maps_GitRef_MapId",
-                table: "Maps",
+                name: "IX_Map_GitRef_MapId",
+                table: "Map",
                 columns: new[] { "GitRef", "MapId" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tiles_MapGuid_GridId",
-                table: "Tiles",
+                name: "IX_Tile_MapGuid_GridId",
+                table: "Tile",
                 columns: new[] { "MapGuid", "GridId" });
+
+            migrationBuilder.Sql(@"
+                DROP FUNCTION IF EXISTS update_timestamp;
+                CREATE FUNCTION update_timestamp() RETURNS TRIGGER
+	                LANGUAGE plpgsql AS $$
+	                BEGIN
+		                NEW.""LastUpdated"" = CURRENT_DATE;
+                            RETURN NEW;
+                    END;
+                    $$;
+            ");
+
+            migrationBuilder.Sql(@"
+                CREATE OR REPLACE TRIGGER ""Map_UPDATE""
+                        BEFORE UPDATE ON ""Map""
+                        FOR EACH ROW
+                        EXECUTE PROCEDURE update_timestamp();
+                ");
+
+            migrationBuilder.Sql(@"
+                CREATE OR REPLACE TRIGGER ""Image_UPDATE""
+                        BEFORE UPDATE ON ""Image""
+                        FOR EACH ROW
+                        EXECUTE PROCEDURE update_timestamp();
+                ");
         }
 
         /// <inheritdoc />
@@ -107,13 +134,17 @@ namespace SS14.MapServer.Migrations
                 name: "Grid");
 
             migrationBuilder.DropTable(
-                name: "Images");
+                name: "Image");
 
             migrationBuilder.DropTable(
-                name: "Tiles");
+                name: "Tile");
 
             migrationBuilder.DropTable(
-                name: "Maps");
+                name: "Map");
+
+            migrationBuilder.Sql(@"DROP FUNCTION IF EXISTS update_timestamp;");
+            migrationBuilder.Sql(@"DROP TRIGGER IF EXISTS ""Map_Update"";");
+            migrationBuilder.Sql(@"DROP TRIGGER IF EXISTS ""Image_Update"";");
         }
     }
 }

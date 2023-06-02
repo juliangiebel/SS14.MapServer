@@ -25,4 +25,7 @@ public class Map
 
     [Column(TypeName = "jsonb")]
     public List<ParallaxLayer> ParallaxLayers { get; set; } = new();
+
+    [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+    public DateTime LastUpdated { get; set; } = DateTime.Now;
 }

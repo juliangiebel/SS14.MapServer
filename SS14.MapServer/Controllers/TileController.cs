@@ -25,7 +25,7 @@ public class TileController : ControllerBase
     [HttpGet("{id:guid}/{gridId:int}/{x:int}/{y:int}/{z:int}")]
     public async Task<IActionResult> GetTile(Guid id, int gridId, int x, int y, int z)
     {
-        var map = await _context.Maps!
+        var map = await _context.Map!
             .Include(map => map.Grids)
             .Where(map => map.MapGuid.Equals(id))
             .SingleOrDefaultAsync();
@@ -40,7 +40,7 @@ public class TileController : ControllerBase
         if (!grid.Tiled)
             return new BadRequestObjectResult(new ApiErrorMessage($"Grid image with id {gridId} doesn't support image tiling"));
 
-        var tile = await _context.Tiles!.FindAsync(id, gridId, x, y);
+        var tile = await _context.Tile!.FindAsync(id, gridId, x, y);
 
         if (tile == null || !System.IO.File.Exists(grid.Path))
             return new NotFoundResult();

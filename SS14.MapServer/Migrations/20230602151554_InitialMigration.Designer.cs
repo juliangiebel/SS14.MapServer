@@ -14,7 +14,7 @@ using SS14.MapServer.Models.Types;
 namespace SS14.MapServer.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20230601210827_InitialMigration")]
+    [Migration("20230602151554_InitialMigration")]
     partial class InitialMigration
     {
         /// <inheritdoc />
@@ -65,9 +65,14 @@ namespace SS14.MapServer.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<DateTime>("LastUpdated")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("now()");
+
                     b.HasKey("Path");
 
-                    b.ToTable("Images");
+                    b.ToTable("Image");
                 });
 
             modelBuilder.Entity("SS14.MapServer.Models.Entities.Map", b =>
@@ -87,6 +92,11 @@ namespace SS14.MapServer.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<DateTime>("LastUpdated")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("now()");
+
                     b.Property<string>("MapId")
                         .IsRequired()
                         .HasColumnType("text");
@@ -99,7 +109,7 @@ namespace SS14.MapServer.Migrations
 
                     b.HasIndex("GitRef", "MapId");
 
-                    b.ToTable("Maps");
+                    b.ToTable("Map");
                 });
 
             modelBuilder.Entity("SS14.MapServer.Models.Entities.Tile", b =>
@@ -127,7 +137,7 @@ namespace SS14.MapServer.Migrations
 
                     b.HasIndex("MapGuid", "GridId");
 
-                    b.ToTable("Tiles");
+                    b.ToTable("Tile");
                 });
 
             modelBuilder.Entity("SS14.MapServer.Models.Entities.Grid", b =>

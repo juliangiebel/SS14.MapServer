@@ -49,7 +49,7 @@ public sealed class MapReaderServiceService : IMapReaderService
             if (data == null)
                 continue;
 
-            var map = await _context.Maps?
+            var map = await _context.Map?
                 .Include(e => e.Grids)
                 .SingleOrDefaultAsync(e => e.GitRef == gitRef && e.MapId == data.Id, cancellationToken)!;
 
@@ -106,7 +106,7 @@ public sealed class MapReaderServiceService : IMapReaderService
 
             if (newMap)
             {
-                var id = (await _context.Maps.AddAsync(map, cancellationToken)).Entity.MapGuid;
+                var id = (await _context.Map.AddAsync(map, cancellationToken)).Entity.MapGuid;
                 ids.Add(id);
             }
             else

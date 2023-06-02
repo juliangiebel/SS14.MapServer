@@ -34,19 +34,19 @@ namespace SS14.MapServer.Controllers
         [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<Map>>> GetMaps()
         {
-            if (_context.Maps == null)
+            if (_context.Map == null)
             {
                 return NotFound();
             }
 
-            return await _context.Maps.Include(map => map.Grids).ToListAsync();
+            return await _context.Map.Include(map => map.Grids).ToListAsync();
         }
 
         [AllowAnonymous]
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<Map>> GetMap(Guid id)
         {
-            if (_context.Maps == null)
+            if (_context.Map == null)
             {
                 return NotFound();
             }
@@ -64,7 +64,7 @@ namespace SS14.MapServer.Controllers
         [HttpGet("{id}/{gitRef}")]
         public async Task<ActionResult<Map>> GetMap(string id, string gitRef)
         {
-            if (_context.Maps == null)
+            if (_context.Map == null)
             {
                 return NotFound();
             }
@@ -153,17 +153,17 @@ namespace SS14.MapServer.Controllers
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> DeleteMap(Guid id)
         {
-            if (_context.Maps == null)
+            if (_context.Map == null)
             {
                 return NotFound();
             }
-            var map = await _context.Maps.FindAsync(id);
+            var map = await _context.Map.FindAsync(id);
             if (map == null)
             {
                 return NotFound();
             }
 
-            _context.Maps.Remove(map);
+            _context.Map.Remove(map);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -172,17 +172,17 @@ namespace SS14.MapServer.Controllers
         [HttpDelete("{id}/{gitRef}")]
         public async Task<IActionResult> DeleteMap(string id, string gitRef)
         {
-            if (_context.Maps == null)
+            if (_context.Map == null)
             {
                 return NotFound();
             }
-            var map = await _context.Maps.SingleOrDefaultAsync(map => map.GitRef == gitRef && map.MapId == id);
+            var map = await _context.Map.SingleOrDefaultAsync(map => map.GitRef == gitRef && map.MapId == id);
             if (map == null)
             {
                 return NotFound();
             }
 
-            _context.Maps.Remove(map);
+            _context.Map.Remove(map);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -203,7 +203,7 @@ namespace SS14.MapServer.Controllers
 
         private async Task<Map?> FindMapWithGrids(string id, string gitRef)
         {
-            return await _context.Maps!
+            return await _context.Map!
                 .Include(map => map.Grids)
                 .Where(map => map.GitRef == gitRef && map.MapId == id)
                 .SingleOrDefaultAsync();
@@ -211,7 +211,7 @@ namespace SS14.MapServer.Controllers
 
         private async Task<Map?> FindMapWithGrids(Guid id)
         {
-            return await _context.Maps!
+            return await _context.Map!
                 .Include(map => map.Grids)
                 .Where(map => map.MapGuid.Equals(id))
                 .SingleOrDefaultAsync();
@@ -219,10 +219,10 @@ namespace SS14.MapServer.Controllers
 
         private async Task<ActionResult<Map>> CreateMap(Map map)
         {
-            if (_context.Maps == null)
+            if (_context.Map == null)
                 return Problem("Entity set 'Context.Maps'  is null.");
 
-            _context.Maps.Add(map);
+            _context.Map.Add(map);
 
             await _context.SaveChangesAsync();
             return CreatedAtAction("GetMap", new { id = map.MapId }, map);
@@ -230,12 +230,12 @@ namespace SS14.MapServer.Controllers
 
         private bool MapExists(string id, string gitRef)
         {
-            return (_context.Maps?.Any(e => e.GitRef == gitRef && e.MapId == id)).GetValueOrDefault();
+            return (_context.Map?.Any(e => e.GitRef == gitRef && e.MapId == id)).GetValueOrDefault();
         }
 
         private bool MapExists(Guid id)
         {
-            return (_context.Maps?.Any(e => e.MapGuid == id)).GetValueOrDefault();
+            return (_context.Map?.Any(e => e.MapGuid == id)).GetValueOrDefault();
         }
     }
 }
