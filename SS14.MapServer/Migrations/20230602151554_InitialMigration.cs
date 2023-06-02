@@ -19,7 +19,7 @@ namespace SS14.MapServer.Migrations
                 {
                     Path = table.Column<string>(type: "text", nullable: false),
                     InternalPath = table.Column<string>(type: "text", nullable: false),
-                    LastUpdated = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    LastUpdated = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
                 },
                 constraints: table =>
                 {
@@ -36,7 +36,7 @@ namespace SS14.MapServer.Migrations
                     DisplayName = table.Column<string>(type: "text", nullable: false),
                     Attribution = table.Column<string>(type: "text", nullable: true),
                     ParallaxLayers = table.Column<List<ParallaxLayer>>(type: "jsonb", nullable: false),
-                    LastUpdated = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    LastUpdated = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
                 },
                 constraints: table =>
                 {

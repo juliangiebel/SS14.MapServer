@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Net.Http.Headers;
 using MimeTypes;
 using SS14.MapServer.Exceptions;
 using SS14.MapServer.Models;
@@ -18,11 +20,11 @@ public class TileController : ControllerBase
         _context = context;
     }
 
-    [ResponseCache(CacheProfileName = "Default")]
     [AllowAnonymous]
-    [Produces("image/jpg", "image/png", "image/webp", "application/json")]
-    [ProducesResponseType(200, Type = typeof(FileStreamResult))]
+    [ResponseCache(CacheProfileName = "Default")]
     [HttpGet("{id:guid}/{gridId:int}/{x:int}/{y:int}/{z:int}")]
+    [ProducesResponseType(200, Type = typeof(FileStreamResult))]
+    [Produces("image/jpg", "image/png", "image/webp", "application/json")]
     public async Task<IActionResult> GetTile(Guid id, int gridId, int x, int y, int z)
     {
         var map = await _context.Map!
@@ -32,6 +34,10 @@ public class TileController : ControllerBase
 
         if (map == null)
             return new NotFoundResult();
+
+        var hash = $@"""{map.MapGuid:N}{map.LastUpdated.GetHashCode():X}""";
+        if (CheckETags(hash, out var result))
+            return result;
 
         var grid = map.Grids.Find(value => value.GridId.Equals(gridId));
         if (grid == null)
@@ -48,6 +54,18 @@ public class TileController : ControllerBase
         var file = new FileStream(tile.Path, FileMode.Open);
         var mimeType = MimeTypeMap.GetMimeType(Path.GetExtension(tile.Path));
 
-        return File(file, mimeType, Path.GetFileName(tile.Path));
+        return File(file, mimeType, map.LastUpdated, new EntityTagHeaderValue(hash), true);
+    }
+
+    private bool CheckETags(string hash, [NotNullWhen(true)] out IActionResult? result)
+    {
+        if (Request.Headers.IfNoneMatch.Any(h => h != null && h.Equals(hash)))
+        {
+            result = new StatusCodeResult(StatusCodes.Status304NotModified);
+            return true;
+        }
+
+        result = null;
+        return false;
     }
 }

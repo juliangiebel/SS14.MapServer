@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using System.Net.Mime;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -38,7 +39,7 @@ public class ImageController : ControllerBase
             .Where(map => map.MapGuid.Equals(id))
             .SingleOrDefaultAsync();
 
-        return InternalGetMap(map, gridId);
+        return await InternalGetMap(map, gridId);
     }
 
     [AllowAnonymous]
@@ -53,7 +54,7 @@ public class ImageController : ControllerBase
             .Where(map => map.GitRef.Equals(gitRef) && map.MapId.Equals(id))
             .SingleOrDefaultAsync();
 
-        return InternalGetMap(map, gridId);
+        return await InternalGetMap(map, gridId);
     }
 
     [HttpPost("upload/{*path}")]
@@ -93,23 +94,50 @@ public class ImageController : ControllerBase
         if (image == null)
             return new NotFoundResult();
 
+        var hash = $@"""{image.Path.GetHashCode():X}{image.LastUpdated.GetHashCode():X}""";
+        if (CheckETags(hash, out var response))
+            return response;
+
         if (!System.IO.File.Exists(image.InternalPath))
         {
             Log.Error("File doesn't exist for image saved in database with internal path: {Path}", path);
             return new NotFoundResult();
         }
 
-        var file = new FileStream(image.InternalPath, FileMode.Open);
         var mimeType = MimeTypeMap.GetMimeType(Path.GetExtension(image.InternalPath));
+        var file = new FileStream(image.InternalPath, FileMode.Open);
 
-        //Setting the file name causes the content-disposition be set to attachment which isn't really what I want
-        return File(file, mimeType, true/*, Path.GetFileName(image.InternalPath)*/);
+        try
+        {
+            return File(file, mimeType, image.LastUpdated, new EntityTagHeaderValue(hash), true);
+        }
+        catch
+        {
+            await file.DisposeAsync();
+            return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+        }
     }
 
-    private IActionResult InternalGetMap(Map? map, int gridId)
+    private bool CheckETags(string hash, [NotNullWhen(true)] out IActionResult? result)
+    {
+        if (Request.Headers.IfNoneMatch.Any(h => h != null && h.Equals(hash)))
+        {
+            result = new StatusCodeResult(StatusCodes.Status304NotModified);
+            return true;
+        }
+
+        result = null;
+        return false;
+    }
+
+    private async Task<IActionResult> InternalGetMap(Map? map, int gridId)
     {
         if (map == null)
             return new NotFoundResult();
+
+        var hash = $@"""{map.MapGuid:N}{map.LastUpdated.GetHashCode():X}""";
+        if (CheckETags(hash, out var result))
+            return result;
 
         var grid = map.Grids.Find(value => value.GridId.Equals(gridId));
         if (grid == null)
@@ -124,7 +152,14 @@ public class ImageController : ControllerBase
         var file = new FileStream(grid.Path, FileMode.Open);
         var mimeType = MimeTypeMap.GetMimeType(Path.GetExtension(grid.Path));
 
-        //Setting the file name causes the content-disposition be set to attachment which isn't really what I want
-        return File(file, mimeType, true/*, Path.GetFileName(grid.Path)*/);
+        try
+        {
+            return File(file, mimeType, map.LastUpdated, new EntityTagHeaderValue(hash), true);
+        }
+        catch
+        {
+            await file.DisposeAsync();
+            return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+        }
     }
 }

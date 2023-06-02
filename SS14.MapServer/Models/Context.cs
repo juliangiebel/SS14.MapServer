@@ -15,14 +15,14 @@ public class Context : DbContext
     {
         builder.Entity<Map>()
             .Property(e => e.LastUpdated)
-            .HasDefaultValueSql("now()");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
         builder.Entity<Grid>();
         builder.Entity<Tile>();
 
         builder.Entity<ImageFile>()
             .Property(e => e.LastUpdated)
-            .HasDefaultValueSql("now()");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
     }
 
 }
