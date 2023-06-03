@@ -5,6 +5,7 @@ using SS14.MapServer.Models.Types;
 
 namespace SS14.MapServer.Models.Entities;
 
+[Index(nameof(GitRef))]
 [Index(nameof(GitRef), nameof(MapId))]
 public class Map
 {

@@ -62,7 +62,7 @@ public sealed class MapReaderServiceService : IMapReaderService
             }
 
             map.GitRef = gitRef;
-            map.MapId = data.Id;
+            map.MapId = data.Id.ToLower();
             map.DisplayName = data.DisplayName;
             map.Attribution = data.Attribution;
             map.ParallaxLayers = data.ParallaxLayers;

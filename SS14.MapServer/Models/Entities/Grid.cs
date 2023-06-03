@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 using SS14.MapServer.Models.Types;
 using Point = SS14.MapServer.Models.Types.Point;
@@ -19,4 +20,7 @@ public class Grid
 
     [Required, JsonIgnore]
     public string Path { get; set; } = default!;
+
+    [NotMapped]
+    public string? Url { get; set; }
 }

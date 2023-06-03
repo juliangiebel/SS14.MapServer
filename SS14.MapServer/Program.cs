@@ -7,6 +7,7 @@ using Serilog;
 using SS14.GithubApiHelper.Services;
 using SS14.MapServer;
 using SS14.MapServer.BuildRunners;
+using SS14.MapServer.Configuration;
 using SS14.MapServer.MapProcessing.Services;
 using SS14.MapServer.Models;
 using SS14.MapServer.Security;
@@ -28,6 +29,18 @@ builder.Services.AddControllers(options =>
     options.CacheProfiles.Add("Default", new CacheProfile()
     {
         Duration = 60
+    });
+});
+
+var corsConfiguration = new ServerConfiguration();
+builder.Configuration.Bind(ServerConfiguration.Name, corsConfiguration);
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins(corsConfiguration.CorsOrigins.ToArray());
+        policy.AllowCredentials();
     });
 });
 
@@ -107,6 +120,7 @@ if (app.Environment.IsDevelopment())
 }
 
 //app.UseHttpsRedirection();
+app.UseCors();
 
 app.UseResponseCaching();
 

@@ -18,3 +18,7 @@ Processing:
 
 Github:
     AppName: "SS14.MapServer"
+
+Server:
+    CorsOrigins:
+        - "http://localhost:5173"
