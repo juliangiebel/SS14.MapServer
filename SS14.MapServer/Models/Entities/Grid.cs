@@ -1,11 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
 using SS14.MapServer.Models.Types;
 using Point = SS14.MapServer.Models.Types.Point;
 
 namespace SS14.MapServer.Models.Entities;
 
+[Index(nameof(GridId))]
 public class Grid
 {
     [Key]

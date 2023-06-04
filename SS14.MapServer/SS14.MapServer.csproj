@@ -52,6 +52,12 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Content Include="Resources\**\*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+  
+    <ItemGroup>
       <_ContentIncludedByDefault Remove="data\git\nuget.config" />
       <_ContentIncludedByDefault Remove="data\git\RobustToolbox\cefglue\CefGlue.Client\app.config" />
       <_ContentIncludedByDefault Remove="data\git\RobustToolbox\cefglue\CefGlue.Demo.GtkSharp\app.config" />

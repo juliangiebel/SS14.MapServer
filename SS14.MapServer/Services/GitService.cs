@@ -22,11 +22,12 @@ public sealed class GitService
     /// <param name="workingDirectory"></param>
     /// <param name="gitRef">[Optional] The Ref to pull</param>
     /// <returns></returns>
-    public string Sync(string workingDirectory, string? gitRef = null)
+    public string Sync(string workingDirectory, string? gitRef = null, string? repoUrl = null)
     {
         gitRef ??= _configuration.Branch;
+        repoUrl ??= _configuration.RepositoryUrl;
 
-        var repositoryName = Path.GetFileNameWithoutExtension(_configuration.RepositoryUrl);
+        var repositoryName = Path.GetFileNameWithoutExtension(repoUrl);
         var repoDirectory = Path.Join(workingDirectory, repositoryName);
 
         if (!Path.IsPathRooted(repoDirectory))
@@ -34,7 +35,7 @@ public sealed class GitService
 
 
         if (!Directory.Exists(repoDirectory))
-            Clone(repoDirectory, gitRef);
+            Clone(repoUrl, repoDirectory, gitRef);
 
         Pull(repoDirectory, gitRef);
 
@@ -42,10 +43,10 @@ public sealed class GitService
         return repoDirectory;
     }
 
-    private void Clone(string directory, string gitRef)
+    private void Clone(string repoUrl, string directory, string gitRef)
     {
         _log.Information("Cloning branch/commit {Ref}...", gitRef);
-        var repoDirectory = Repository.Clone(_configuration.RepositoryUrl, directory, new CloneOptions
+        var repoDirectory = Repository.Clone(repoUrl, directory, new CloneOptions
         {
             RecurseSubmodules = true,
             OnProgress = LogProgress

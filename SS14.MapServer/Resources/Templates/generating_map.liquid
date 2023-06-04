@@ -1,0 +1,9 @@
+﻿This PR contains new or changed maps:
+{% if files != null and files.size > 0 %}
+{%- for file in files %}
+    - {{ file }}
+{%- endfor -%}
+{%- endif %}
+
+Maps are being rendered. This comment will be updated if rendering them is done.
+*{{ "now" | date: "%D R" }}*

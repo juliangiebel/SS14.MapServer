@@ -18,7 +18,9 @@ Processing:
 
 Github:
     AppName: "SS14.MapServer"
+    TemplateLocation: "Resources/Templates"
 
 Server:
     CorsOrigins:
         - "http://localhost:5173"
+    Language: "en-US"

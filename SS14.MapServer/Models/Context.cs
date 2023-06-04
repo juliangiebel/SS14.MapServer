@@ -9,6 +9,8 @@ public class Context : DbContext
     public DbSet<Tile>? Tile { get; set; }
     public DbSet<ImageFile>? Image { get; set; }
 
+    public DbSet<PullRequestComment>? PullRequestComment { get; set; }
+
     public Context(DbContextOptions<Context> options) : base(options) {}
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -23,6 +25,8 @@ public class Context : DbContext
         builder.Entity<ImageFile>()
             .Property(e => e.LastUpdated)
             .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+        builder.Entity<PullRequestComment>();
     }
 
 }

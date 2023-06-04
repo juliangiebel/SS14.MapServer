@@ -58,6 +58,7 @@ public sealed class ProcessQueueHostedService : BackgroundService
                                 directory.Directory.FullName,
                                 processItem.GitRef,
                                 processItem.Maps,
+                                processItem.RepositoryUrl,
                                 cancellationToken)
                             .ContinueWith(
                                 task => processItem.OnCompletion.Invoke(task.Result),

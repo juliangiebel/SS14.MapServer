@@ -33,15 +33,21 @@ public sealed class MapUpdateService
     /// <param name="directory">The directory to operate in</param>
     /// <param name="gitRef">The git ref to pull (branch/commit)</param>
     /// <param name="maps">A list of map file names to be generated</param>
+    /// <param name="repositoryUrl">The clone url of the repository to clone from</param>
     /// <param name="cancellationToken"></param>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
     /// <returns>The commit that was checked out for building and running the map renderer</returns>
     /// <remarks>
     /// Syncing the maps doesn't create a new working directory so running this in parallel on the same directory would cause errors.<br/>
     /// </remarks>
-    public async Task<MapProcessResult> UpdateMapsFromGit(string directory, string gitRef, IEnumerable<string> maps, CancellationToken cancellationToken = default)
+    public async Task<MapProcessResult> UpdateMapsFromGit(
+        string directory,
+        string gitRef,
+        IEnumerable<string> maps,
+        string? repositoryUrl = null,
+        CancellationToken cancellationToken = default)
     {
-        var workingDirectory = _gitService.Sync(directory, gitRef);
+        var workingDirectory = _gitService.Sync(directory, gitRef, repositoryUrl);
 
         var command = Path.Join(
             _buildConfiguration.RelativeOutputPath,
