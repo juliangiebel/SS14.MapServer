@@ -1,7 +1,6 @@
 ﻿FROM mcr.microsoft.com/dotnet/sdk:7.0 AS base
 WORKDIR /app
 EXPOSE 80
-EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
@@ -18,6 +17,7 @@ FROM base AS final
 WORKDIR /app
 ENV DOTNET_ENVIRONMENT=Production
 ENV ASPNETCORE_ENVIRONMENT=Production
+ENV ASPNETCORE_URLS=http://*:80
 COPY --from=publish /app/publish .
 COPY ./SS14.MapServer/appsettings.yaml .
 COPY ./SS14.MapServer/appsettings.Production.yaml .

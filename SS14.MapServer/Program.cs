@@ -133,7 +133,7 @@ if (app.Environment.IsDevelopment())
 
 if (app.Environment.IsProduction() || app.Environment.IsStaging())
 {
-    app.UseHttpsRedirection();
+    //app.UseHttpsRedirection();
 }
 
 app.UseCors();

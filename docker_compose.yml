@@ -1,0 +1,19 @@
+version: '3.3'
+services:
+  #The ss14 map server container doesn't support https on its own. Please use a reverse proxy
+  ss14mapserver:
+    build:
+      context: ./
+      dockerfile: SS14.Issues/Dockerfile
+    volumes:
+      - ./appsettings.yaml:/app/appsettings.yaml
+      - ./private-key.pem:/app/private-key.pem
+    ports:
+      - '5218':'80' #Replace 5218 with the port you need
+  map_database:
+    image: postgres:latest
+    environment:
+      - POSTGRES_PASSWORD=postgres #Replace postgres with a randomly generated password
+    volumes:
+      - ./data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
