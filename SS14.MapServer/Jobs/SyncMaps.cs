@@ -28,7 +28,7 @@ public class SyncMaps : IJob
         if (Maps.IsNullOrEmpty())
             throw new JobExecutionException($"Job data value with key ${MapListKey} and type List<string> is missing");
 
-        var processItem = new ProcessItem(GitRef, Maps!, value =>
+        var processItem = new ProcessItem(GitRef, Maps!,  (_, value) =>
             { Log.Debug("Finished processing maps for branch/commit {GitRef}. {MapIds}", value.GitRef, value.MapIds); });
 
         if (!await _processQueue.TryQueueProcessItem(processItem))

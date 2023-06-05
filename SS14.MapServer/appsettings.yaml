@@ -1,13 +1,14 @@
 Serilog:
   Using: [ "Serilog.Sinks.Console" ]
   MinimumLevel:
-    Default: Debug #Information
+    Default: "Information"
     Override:
-      SS14: Debug
+      SS14: "Information"
       Microsoft: "Warning"
       Microsoft.Hosting.Lifetime: "Information"
-      Microsoft.AspNetCore: Warning
-  
+      Microsoft.AspNetCore: "Warning"
+      Microsoft.AspNetCore.DataProtection: "Error" #This service doesn't use data protection
+
   WriteTo:
     - Name: Console
       Args:

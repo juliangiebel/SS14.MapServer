@@ -113,14 +113,14 @@ namespace SS14.MapServer.Migrations
             ");
 
             migrationBuilder.Sql(@"
-                CREATE OR REPLACE TRIGGER ""Map_UPDATE""
+                CREATE TRIGGER ""Map_UPDATE""
                         BEFORE UPDATE ON ""Map""
                         FOR EACH ROW
                         EXECUTE PROCEDURE update_timestamp();
                 ");
 
             migrationBuilder.Sql(@"
-                CREATE OR REPLACE TRIGGER ""Image_UPDATE""
+                CREATE TRIGGER ""Image_UPDATE""
                         BEFORE UPDATE ON ""Image""
                         FOR EACH ROW
                         EXECUTE PROCEDURE update_timestamp();

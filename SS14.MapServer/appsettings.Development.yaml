@@ -24,3 +24,6 @@ Server:
     CorsOrigins:
         - "http://localhost:5173"
     Language: "en-US"
+
+Git:
+    Branch: "mapservertest"

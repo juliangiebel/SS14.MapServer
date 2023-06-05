@@ -26,13 +26,18 @@ public class GitHubWebhookController : ControllerBase
 
     private readonly GithubApiService _githubApiService;
     private readonly ProcessQueue _processQueue;
-    private readonly Context _context;
 
     private readonly IConfiguration _configuration;
     private readonly GitConfiguration _gitConfiguration = new();
     private readonly ServerConfiguration _serverConfiguration = new();
 
-    public GitHubWebhookController(IConfiguration configuration, GithubApiService githubApiService, ProcessQueue processQueue, Context context)
+    private Context _context;
+
+    public GitHubWebhookController(
+        IConfiguration configuration,
+        GithubApiService githubApiService,
+        ProcessQueue processQueue,
+        Context context)
     {
         _configuration = configuration;
         _githubApiService = githubApiService;
@@ -79,7 +84,7 @@ public class GitHubWebhookController : ControllerBase
             $"{headCommit.User.Login}:{headCommit.Ref}"
             );
 
-        var files = enumerable.ToList();
+        var files = enumerable.Select(Path.GetFileName).ToList();
 
         if (files.Count == 0)
             return;
@@ -89,10 +94,10 @@ public class GitHubWebhookController : ControllerBase
         var installation = new InstallationIdentifier(payload.Installation.Id, payload.Repository.Id);
 
         var processItem = new ProcessItem(
-            headCommit.Ref,
-            files,
+            Path.GetFileName(headCommit.Ref),
+            files!,
             // ReSharper disable once AsyncVoidLambda
-            async result => await OnPrProcessingResult(result, installation, payload.PullRequest),
+            async (provider, result) => await OnPrProcessingResult(provider, result, installation, payload.PullRequest),
             repository);
 
         await _processQueue.TryQueueProcessItem(processItem);
@@ -114,12 +119,12 @@ public class GitHubWebhookController : ControllerBase
             payload.Before,
             payload.After);
 
-        var files = enumerable.ToList();
+        var files = enumerable.Select(Path.GetFileName).ToList();
 
         if (files.Count == 0)
             return;
 
-        var processItem = new ProcessItem(payload.Ref, files, _ => { });
+        var processItem = new ProcessItem(Path.GetFileName(payload.Ref), files!, (_, _) => { });
         await _processQueue.TryQueueProcessItem(processItem);
     }
 
@@ -161,7 +166,7 @@ public class GitHubWebhookController : ControllerBase
         var prComment = _context.PullRequestComment?.Find(
             baseCommit.User.Login,
             baseCommit.Repository.Name,
-            payload.PullRequest.Id);
+            payload.PullRequest.Number);
 
         if (prComment != null)
             return;
@@ -169,7 +174,7 @@ public class GitHubWebhookController : ControllerBase
         var issue = new IssueIdentifier(
             baseCommit.User.Login,
             baseCommit.Repository.Name,
-            (int) payload.PullRequest.Id);
+            payload.PullRequest.Number);
 
         var commentId = await _githubApiService.CreateCommentWithTemplate(
             new InstallationIdentifier(payload.Installation.Id, payload.Repository.Id),
@@ -180,10 +185,21 @@ public class GitHubWebhookController : ControllerBase
         SavePrComment(commentId, issue);
     }
 
-    private async Task OnPrProcessingResult(MapProcessResult result, InstallationIdentifier installation, PullRequest pullRequest)
+    /// <summary>
+    /// Retrieves the maps that where rendered and creates a PR comment containing the map images
+    /// </summary>
+    /// <param name="serviceProvider"></param>
+    /// <param name="result"></param>
+    /// <param name="installation"></param>
+    /// <param name="pullRequest"></param>
+    /// <remarks>This method gets called out of scope. Which is why _context needs to be set again here</remarks>
+    private async Task OnPrProcessingResult(IServiceProvider serviceProvider, MapProcessResult result,
+        InstallationIdentifier installation, PullRequest pullRequest)
     {
         var images = new List<(string Name, string Url)>();
 
+        using var scope = serviceProvider.CreateScope();
+        _context = scope.ServiceProvider.GetService<Context>()!;
         foreach (var mapId in result.MapIds)
         {
             var map = await FindMapWithGrids(mapId);
@@ -192,9 +208,6 @@ public class GitHubWebhookController : ControllerBase
             var grid = map.Grids[0];
 
             var url = GetGridImageUrl(mapId, grid.GridId);
-            if (url == null)
-                continue;
-
             images.Add((map.DisplayName, url));
         }
 
@@ -202,12 +215,12 @@ public class GitHubWebhookController : ControllerBase
         var prComment = _context.PullRequestComment?.Find(
             pullRequest.Base.User.Login,
             pullRequest.Base.Repository.Name,
-            pullRequest.Id);
+            pullRequest.Number);
 
         var issue = new IssueIdentifier(
             pullRequest.Base.User.Login,
             pullRequest.Base.Repository.Name,
-            (int) pullRequest.Id);
+            pullRequest.Number);
 
         if (prComment == null)
         {
@@ -215,7 +228,7 @@ public class GitHubWebhookController : ControllerBase
                 installation,
                 issue,
                 "map_comment",
-                new {images = images.ToArray()});
+                new { images = images.ToArray() });
 
             SavePrComment(commentId, issue);
         }
@@ -226,7 +239,7 @@ public class GitHubWebhookController : ControllerBase
                 issue,
                 prComment.CommentId,
                 "map_comment",
-                new {images = images.ToArray()});
+                new { images = images.ToArray() });
         }
     }
 
@@ -243,6 +256,7 @@ public class GitHubWebhookController : ControllerBase
             CommentId = commentId.Value
         };
         _context.PullRequestComment?.Add(prComment);
+        _context.SaveChanges();
     }
 
     private async Task<Map?> FindMapWithGrids(Guid id)
@@ -253,14 +267,11 @@ public class GitHubWebhookController : ControllerBase
             .SingleOrDefaultAsync();
     }
 
-    private string? GetGridImageUrl(Guid mapGuid, int gridId)
+    private string GetGridImageUrl(Guid mapGuid, int gridId)
     {
-        return Url.Action(
-            "GetGridImage",
-            "Image",
-            new { id = mapGuid, gridId },
-            _serverConfiguration.Host.Scheme,
-            $"{_serverConfiguration.Host.Host}:{_serverConfiguration.Host.Port}");
+        //Can't access Url.Action here
+        return
+            $"{_serverConfiguration.Host.Scheme}://{_serverConfiguration.Host.Host}:{_serverConfiguration.Host.Port}/api/Image/grid/{mapGuid}/{gridId}";
     }
 }
 

@@ -62,6 +62,7 @@ public sealed class GitService
         _log.Information( "Pulling branch/commit {Ref}...", gitRef);
 
         using var repository = new Repository(repoDirectory);
+        Commands.Fetch(repository, "origin", new []{gitRef}, new FetchOptions(), "");
         Commands.Checkout(repository, gitRef);
         var signature = repository.Config.BuildSignature(DateTimeOffset.Now);
 

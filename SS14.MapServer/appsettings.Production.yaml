@@ -1,0 +1,15 @@
+﻿Processing:
+    TargetDirectory: "/app/build"
+    DirectoryPoolMaxSize: 3
+
+Github:
+    AppName: "SS14.MapServer"
+    TemplateLocation: "Resources/Templates"
+
+Server:
+    CorsOrigins:
+        - "http://localhost:5173"
+    Language: "en-US"
+
+Git:
+    Branch: "mapservertest"

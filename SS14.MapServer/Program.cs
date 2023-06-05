@@ -111,6 +111,8 @@ builder.Logging.AddSerilog();
 
 var app = builder.Build();
 
+Log.Information("Environment: {Environment}", builder.Environment.EnvironmentName);
+
 //Preflight Checks
 Log.Information("Running preflight checks...");
 var checkResult = await app.Services.GetService<StartupCheckService>()?.RunStartupCheck()!;

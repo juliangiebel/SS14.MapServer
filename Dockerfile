@@ -1,4 +1,4 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
+﻿FROM mcr.microsoft.com/dotnet/sdk:7.0 AS base
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443
@@ -16,5 +16,10 @@ RUN dotnet publish "SS14.MapServer.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
+ENV DOTNET_ENVIRONMENT=Production
+ENV ASPNETCORE_ENVIRONMENT=Production
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "SS14.MapServer.dll"]
+COPY ./SS14.MapServer/appsettings.yaml .
+COPY ./SS14.MapServer/appsettings.Production.yaml .
+RUN mkdir /app/build
+ENTRYPOINT ["dotnet", "SS14.MapServer.dll", "--environment=Production"]

@@ -10,7 +10,7 @@ public sealed class LocalBuildService
 {
     private readonly BuildConfiguration _configuration = new();
     private readonly ILogger _log;
-    
+
     public LocalBuildService(IConfiguration configuration)
     {
         configuration.Bind(BuildConfiguration.Name, _configuration);
@@ -43,9 +43,9 @@ public sealed class LocalBuildService
         var outputDir = Path.Join(directory, _configuration.RelativeOutputPath);
         process.StartInfo.Arguments = "build -c Release";
         process.OutputDataReceived += LogOutput;
-        
+
         _log.Information("Started building {ProjectName}", _configuration.MapRendererProjectName);
-        
+
         process.Start();
         process.BeginOutputReadLine();
         await process.WaitForExitAsync(cancellationToken).WaitAsync(TimeSpan.FromMinutes(_configuration.ProcessTimeoutMinutes), cancellationToken);
@@ -56,42 +56,42 @@ public sealed class LocalBuildService
             process.Kill();
             throw new BuildException($"Building timed out {_configuration.MapRendererProjectName}");
         }
-        
+
         if (process.ExitCode != 0)
             throw new BuildException($"Failed building {_configuration.MapRendererProjectName}");
-        
+
         _log.Information("Build finished");
     }
 
     public async Task Run(string directory, string command, List<string> arguments, CancellationToken cancellationToken = default)
     {
         var executablePath = Path.Join(directory, command);
-        
+
         using var process = new Process();
         SetUpProcess(process, executablePath);
         process.StartInfo.WorkingDirectory = directory;
         process.StartInfo.Arguments = string.Join(' ', arguments);
         process.OutputDataReceived += LogOutput;
         process.ErrorDataReceived += LogOutput;
-       
+
         _log.Information("Running: {Command} {Arguments}", command, string.Join(' ', arguments));
-        
+
         process.Start();
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
         await process.WaitForExitAsync(cancellationToken).WaitAsync(TimeSpan.FromMinutes(_configuration.ProcessTimeoutMinutes), cancellationToken);
         process.CancelErrorRead();
         process.CancelOutputRead();
-        
+
         if (!process.HasExited)
         {
             process.Kill();
             throw new BuildException($"Run timed out {_configuration.MapRendererProjectName}");
         }
-        
+
         _log.Information("Run finished");
     }
-    private void SetUpProcess(Process process, string? executable = "dotnet.exe")
+    private void SetUpProcess(Process process, string? executable = "dotnet")
     {
         process.StartInfo.UseShellExecute = false;
         process.StartInfo.RedirectStandardOutput = true;
@@ -103,7 +103,7 @@ public sealed class LocalBuildService
     {
         if (args.Data == null)
             return;
-        
+
         _log.Debug("{Output}", args.Data);
     }
 }
