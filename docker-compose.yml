@@ -4,7 +4,7 @@ services:
   ss14mapserver:
     build:
       context: ./
-      dockerfile: SS14.Issues/Dockerfile
+      dockerfile: SS14.MapServer/Dockerfile
     volumes:
       - ./appsettings.yaml:/app/appsettings.yaml
       - ./private-key.pem:/app/private-key.pem
