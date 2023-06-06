@@ -21,6 +21,7 @@ ENV ASPNETCORE_URLS=http://*:80
 COPY --from=publish /app/publish .
 COPY ./SS14.MapServer/appsettings.yaml .
 COPY ./SS14.MapServer/appsettings.Production.yaml .
+RUN apt-get update -y && apt-get -y install procps
 RUN mkdir /app/build
 RUN chown -R 20202:20202 /app
 USER 20202:20202
