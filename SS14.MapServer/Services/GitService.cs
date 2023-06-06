@@ -1,5 +1,7 @@
-﻿using LibGit2Sharp;
+﻿using System.Diagnostics;
+using LibGit2Sharp;
 using Serilog;
+using SS14.MapServer.BuildRunners;
 using SS14.MapServer.Configuration;
 using ILogger = Serilog.ILogger;
 
@@ -7,11 +9,14 @@ namespace SS14.MapServer.Services;
 
 public sealed class GitService
 {
+    private readonly LocalBuildService _buildService;
+
     private readonly GitConfiguration _configuration = new();
     private readonly ILogger _log;
 
-    public GitService(IConfiguration configuration)
+    public GitService(IConfiguration configuration, LocalBuildService buildService)
     {
+        _buildService = buildService;
         configuration.Bind(GitConfiguration.Name, _configuration);
         _log = Log.ForContext(typeof(GitService));
     }
@@ -41,6 +46,18 @@ public sealed class GitService
 
 
         return repoDirectory;
+    }
+
+    /// <summary>
+    /// Returns the commit hash the repo contained in the given directory is on
+    /// </summary>
+    /// <param name="directory">A directory containing a git repository</param>
+    /// <returns>The commit has of the repository</returns>
+    /// <exception cref="NotImplementedException"></exception>
+    public string GetRepoCommitHash(string directory)
+    {
+        using var repository = new Repository(directory);
+        return repository.Head.Tip.Sha;
     }
 
     private void Clone(string repoUrl, string directory, string gitRef)
@@ -93,15 +110,8 @@ public sealed class GitService
             }
         };
 
-        _log.Debug("Merging fetched refs");
-        //Commands.Pull(repository, signature, pullOptions);
-        repository.MergeFetchedRefs(
-            signature,
-            new MergeOptions()
-            {
-                FailOnConflict = true,
-                OnCheckoutProgress = (message, _, _) => LogProgress(message)
-            });
+        _log.Debug("Pulling latest changes");
+        _buildService.Run(repoDirectory, "git", new List<string> { "pull origin HEAD" }).Wait();
 
         _log.Debug("Updating submodules");
         foreach (var submodule in repository.Submodules)
@@ -121,15 +131,11 @@ public sealed class GitService
         return true;
     }
 
-    /// <summary>
-    /// Returns the commit hash the repo contained in the given directory is on
-    /// </summary>
-    /// <param name="directory">A directory containing a git repository</param>
-    /// <returns>The commit has of the repository</returns>
-    /// <exception cref="NotImplementedException"></exception>
-    public string GetRepoCommitHash(string directory)
+    private void LogOutput(object _, DataReceivedEventArgs args)
     {
-        using var repository = new Repository(directory);
-        return repository.Head.Tip.Sha;
+        if (args.Data == null)
+            return;
+
+        _log.Debug("{Output}", args.Data);
     }
 }
