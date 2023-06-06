@@ -75,13 +75,15 @@ public sealed class LocalBuildService
         process.ErrorDataReceived += LogOutput;
 
         _log.Information("Running: {Command} {Arguments}", command, string.Join(' ', arguments));
-
+        _log.Debug("Started process");
         process.Start();
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
+        //process.BeginOutputReadLine();
+        //process.BeginErrorReadLine();
+        _log.Debug("Waiting for process exit...");
         await process.WaitForExitAsync(cancellationToken).WaitAsync(TimeSpan.FromMinutes(_configuration.ProcessTimeoutMinutes), cancellationToken);
-        process.CancelErrorRead();
-        process.CancelOutputRead();
+        _log.Debug("Stopped process");
+        //process.CancelErrorRead();
+        //process.CancelOutputRead();
 
         if (!process.HasExited)
         {
@@ -94,8 +96,8 @@ public sealed class LocalBuildService
     private void SetUpProcess(Process process, string? executable = "dotnet")
     {
         process.StartInfo.UseShellExecute = false;
-        process.StartInfo.RedirectStandardOutput = true;
-        process.StartInfo.RedirectStandardError = true;
+        //process.StartInfo.RedirectStandardOutput = true;
+        //process.StartInfo.RedirectStandardError = true;
         process.StartInfo.FileName = executable;
     }
 
