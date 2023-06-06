@@ -71,6 +71,8 @@ public sealed class LocalBuildService
         SetUpProcess(process, executablePath);
         process.StartInfo.WorkingDirectory = directory;
         process.StartInfo.Arguments = string.Join(' ', arguments);
+        process.StartInfo.RedirectStandardError = false;
+        process.StartInfo.RedirectStandardOutput = false;
         process.OutputDataReceived += LogOutput;
         process.ErrorDataReceived += LogOutput;
 
