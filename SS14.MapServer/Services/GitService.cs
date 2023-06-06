@@ -62,7 +62,19 @@ public sealed class GitService
         _log.Information( "Pulling branch/commit {Ref}...", gitRef);
 
         using var repository = new Repository(repoDirectory);
-        Commands.Fetch(repository, "origin", new []{gitRef}, new FetchOptions(), "");
+        _log.Debug("Fetching ref");
+
+        Commands.Fetch(
+            repository,
+            "origin",
+            new []{gitRef},
+            new FetchOptions
+            {
+                OnProgress = LogProgress
+            },
+            "Fetched ref");
+
+        _log.Debug("Checking out {Ref}", gitRef);
         Commands.Checkout(repository, gitRef);
         var signature = repository.Config.BuildSignature(DateTimeOffset.Now);
 
@@ -73,9 +85,10 @@ public sealed class GitService
                 OnProgress = LogProgress
             }
         };
-
+        _log.Debug("Pulling latest changes");
         Commands.Pull(repository, signature, pullOptions);
 
+        _log.Debug("Updating submodules");
         foreach (var submodule in repository.Submodules)
         {
             repository.Submodules.Update(submodule.Name, new SubmoduleUpdateOptions
