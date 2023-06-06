@@ -81,14 +81,14 @@ public sealed class LocalBuildService
         //process.BeginOutputReadLine();
         //process.BeginErrorReadLine();
         _log.Debug("Waiting for process exit...");
-        await process.WaitForExitAsync(cancellationToken).WaitAsync(TimeSpan.FromMinutes(_configuration.ProcessTimeoutMinutes), cancellationToken);
+        await process.WaitForExitAsync(cancellationToken);//.WaitAsync(TimeSpan.FromMinutes(_configuration.ProcessTimeoutMinutes), cancellationToken);
         _log.Debug("Stopped process");
         //process.CancelErrorRead();
         //process.CancelOutputRead();
 
         var output = await process.StandardOutput.ReadToEndAsync(cancellationToken);
         _log.Debug("Output: {Output}", output);
-        
+
         if (!process.HasExited)
         {
             process.Kill();
