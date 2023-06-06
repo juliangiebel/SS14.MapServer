@@ -60,6 +60,7 @@ public sealed class GitService
     private void Pull(string repoDirectory, string gitRef)
     {
         _log.Information( "Pulling branch/commit {Ref}...", gitRef);
+        _log.Debug("Opening repository in: {RepositoryPath}", repoDirectory);
 
         using var repository = new Repository(repoDirectory);
         _log.Debug("Fetching ref");
