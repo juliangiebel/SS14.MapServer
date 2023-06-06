@@ -81,6 +81,11 @@ public sealed class GitService
 
         var pullOptions = new PullOptions
         {
+            MergeOptions = new MergeOptions()
+            {
+                FailOnConflict = true,
+                OnCheckoutProgress = (message, _, _) => LogProgress(message)
+            },
             FetchOptions = new FetchOptions
             {
                 OnProgress = LogProgress
