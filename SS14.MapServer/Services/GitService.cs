@@ -88,10 +88,12 @@ public sealed class GitService
             },
             FetchOptions = new FetchOptions
             {
+                OnTransferProgress = progress => LogProgress($"Indexed: {progress.IndexedObjects} | Received: {progress.ReceivedObjects} of {progress.TotalObjects}"),
                 OnProgress = LogProgress
             }
         };
         _log.Debug("Pulling latest changes");
+
         Commands.Pull(repository, signature, pullOptions);
 
         _log.Debug("Updating submodules");
