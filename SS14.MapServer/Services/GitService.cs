@@ -73,7 +73,7 @@ public sealed class GitService
             {
                 OnProgress = LogProgress
             },
-            "Fetched ref");
+            null);
 
         _log.Debug("Checking out {Ref}", gitRef);
         Commands.Checkout(repository, gitRef);
@@ -92,9 +92,16 @@ public sealed class GitService
                 OnProgress = LogProgress
             }
         };
-        _log.Debug("Pulling latest changes");
 
-        Commands.Pull(repository, signature, pullOptions);
+        _log.Debug("Merging fetched refs");
+        //Commands.Pull(repository, signature, pullOptions);
+        repository.MergeFetchedRefs(
+            signature,
+            new MergeOptions()
+            {
+                FailOnConflict = true,
+                OnCheckoutProgress = (message, _, _) => LogProgress(message)
+            });
 
         _log.Debug("Updating submodules");
         foreach (var submodule in repository.Submodules)
