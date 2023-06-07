@@ -30,7 +30,7 @@ public sealed class LocalBuildService
     public async Task<string> BuildAndRun(string directory, string command, List<string> arguments, CancellationToken cancellationToken = default)
     {
         await Build(directory, cancellationToken);
-        await Run(directory, command, arguments, cancellationToken);
+        await Run(directory, command, arguments, cancellationToken, true);
         return Path.Join(directory, _configuration.RelativeMapFilesPath);
     }
 
