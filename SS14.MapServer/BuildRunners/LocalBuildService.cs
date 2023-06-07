@@ -71,8 +71,6 @@ public sealed class LocalBuildService
         SetUpProcess(process, executablePath);
         process.StartInfo.WorkingDirectory = directory;
         process.StartInfo.Arguments = string.Join(' ', arguments);
-        process.StartInfo.RedirectStandardError = false;
-        process.StartInfo.RedirectStandardOutput = false;
         process.OutputDataReceived += LogOutput;
         process.ErrorDataReceived += LogOutput;
 
@@ -100,7 +98,7 @@ public sealed class LocalBuildService
     }
     private void SetUpProcess(Process process, string? executable = "dotnet")
     {
-        process.StartInfo.UseShellExecute = true;
+        process.StartInfo.UseShellExecute = false;
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.RedirectStandardError = true;
         process.StartInfo.FileName = executable;
