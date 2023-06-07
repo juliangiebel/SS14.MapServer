@@ -261,7 +261,7 @@ public class MapController : ControllerBase
 
     private bool MapExists(string id, string gitRef)
     {
-        return (_context.Map?.Any(e => e.GitRef == gitRef && e.MapId == id)).GetValueOrDefault();
+        return (_context.Map?.Any(e => e.GitRef == gitRef && e.MapId == id.ToLower())).GetValueOrDefault();
     }
 
     private bool MapExists(Guid id)

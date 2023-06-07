@@ -49,16 +49,18 @@ public sealed class MapReaderServiceService : IMapReaderService
             if (data == null)
                 continue;
 
-            var map = await _context.Map?
-                .Include(e => e.Grids)
-                .SingleOrDefaultAsync(e => e.GitRef == gitRef && e.MapId == data.Id, cancellationToken)!;
+            var newMap = !await _context.Map!.AnyAsync(e => e.GitRef == gitRef && e.MapId == data.Id.ToLower(), cancellationToken);
+            Map map;
 
-            var newMap = false;
-
-            if (map == default)
+            if (newMap)
             {
                 map = new Map();
-                newMap = true;
+            }
+            else
+            {
+                map = await _context.Map!
+                    .Include(e => e.Grids)
+                    .SingleAsync(e => e.GitRef == gitRef && e.MapId == data.Id.ToLower(), cancellationToken);
             }
 
             map.GitRef = gitRef;
