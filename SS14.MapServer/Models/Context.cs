@@ -15,6 +15,11 @@ public class Context : DbContext
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
+        //[Index(nameof(GitRef), nameof(MapId))]
+        builder.Entity<Map>()
+            .HasIndex(map => new { map.GitRef, map.MapId})
+            .IsUnique();
+
         builder.Entity<Map>()
             .Property(e => e.LastUpdated)
             .HasDefaultValueSql("CURRENT_TIMESTAMP");
