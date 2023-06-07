@@ -75,15 +75,11 @@ public sealed class LocalBuildService
         process.ErrorDataReceived += LogOutput;
 
         _log.Information("Running: {Command} {Arguments}", command, string.Join(' ', arguments));
-
         process.Start();
-        _log.Debug("Started process");
 
         process.BeginErrorReadLine();
         process.BeginOutputReadLine();
-        _log.Debug("Waiting for process exit...");
         await process.WaitForExitAsync(cancellationToken).WaitAsync(TimeSpan.FromMinutes(_configuration.ProcessTimeoutMinutes), cancellationToken);
-        _log.Debug("Stopped process");
         process.CancelErrorRead();
         process.CancelOutputRead();
 

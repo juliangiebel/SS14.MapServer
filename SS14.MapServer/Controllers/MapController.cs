@@ -20,16 +20,23 @@ namespace SS14.MapServer.Controllers;
 public class MapController : ControllerBase
 {
     private readonly Context _context;
+    private readonly MapService _mapService;
     private readonly FileUploadService _fileUploadService;
     private readonly IJobSchedulingService _schedulingService;
 
     private readonly ServerConfiguration _serverConfiguration = new();
 
-    public MapController(Context context, FileUploadService fileUploadService, IJobSchedulingService schedulingService, IConfiguration configuration)
+    public MapController(
+        Context context,
+        FileUploadService fileUploadService,
+        IJobSchedulingService schedulingService,
+        IConfiguration configuration,
+        MapService mapService)
     {
         _context = context;
         _fileUploadService = fileUploadService;
         _schedulingService = schedulingService;
+        _mapService = mapService;
         configuration.Bind(ServerConfiguration.Name, _serverConfiguration);
     }
 
@@ -124,6 +131,78 @@ public class MapController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost]
+    [Consumes("multipart/form-data")]
+    [Produces("application/json")]
+    public async Task<ActionResult<Map>> PostMap([FromForm, ModelBinder(BinderType = typeof(JsonModelBinder))] Map map, IList<IFormFile> images)
+    {
+        if (MapExists(map.MapGuid))
+            return Conflict();
+
+        if (ValidateMapRequest(map, images, out var error))
+            return error;
+
+        var result = await CreateMap(map);
+
+        if (result.Value != null)
+            await _fileUploadService.UploadGridImages(map.GitRef, result.Value, images);
+
+        return result;
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteMap(Guid id)
+    {
+        if (_context.Map == null)
+        {
+            return NotFound();
+        }
+        var map = await _context.Map
+            .Include(map => map.Grids)
+            .SingleOrDefaultAsync(map => map.MapGuid == id);
+
+        if (map == null)
+        {
+            return NotFound();
+        }
+
+        await _mapService.DeleteMap(map);
+        return NoContent();
+    }
+
+    [HttpDelete("{id}/{gitRef}")]
+    public async Task<IActionResult> DeleteMap(string id, string gitRef)
+    {
+        if (_context.Map == null)
+        {
+            return NotFound();
+        }
+        var map = await _context.Map
+            .Include(map => map.Grids)
+            .SingleOrDefaultAsync(map => map.GitRef == gitRef && map.MapId == id.ToLower());
+
+        if (map == null)
+        {
+            return NotFound();
+        }
+
+        await _mapService.DeleteMap(map);
+        return NoContent();
+    }
+
+    [HttpPost("sync")]
+    [Consumes("application/json")]
+    public async Task<IActionResult> SyncMaps(List<string> mapFileNames)
+    {
+        var data = new JobDataMap
+        {
+            {Jobs.SyncMaps.MapListKey, mapFileNames}
+        };
+
+        await _schedulingService.RunJob<Jobs.SyncMaps>(nameof(Jobs.SyncMaps), "Sync", data);
+        return Ok();
+    }
+
     private bool ValidateMapRequest(Map map, ICollection<IFormFile> images, [NotNullWhen(true)] out BadRequestObjectResult? error)
     {
         //Ensure map id is lowercase
@@ -151,76 +230,6 @@ public class MapController : ControllerBase
 
         error = null;
         return false;
-    }
-
-    [HttpPost]
-    [Consumes("multipart/form-data")]
-    [Produces("application/json")]
-    public async Task<ActionResult<Map>> PostMap([FromForm, ModelBinder(BinderType = typeof(JsonModelBinder))] Map map, IList<IFormFile> images)
-    {
-        if (MapExists(map.MapGuid))
-            return Conflict();
-
-        if (ValidateMapRequest(map, images, out var error))
-            return error;
-
-        var result = await CreateMap(map);
-
-        if (result.Value != null)
-            await _fileUploadService.UploadGridImages(map.GitRef, result.Value, images);
-
-        return result;
-    }
-
-    [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> DeleteMap(Guid id)
-    {
-        if (_context.Map == null)
-        {
-            return NotFound();
-        }
-        var map = await _context.Map.FindAsync(id);
-        if (map == null)
-        {
-            return NotFound();
-        }
-
-        _context.Map.Remove(map);
-        await _context.SaveChangesAsync();
-
-        return NoContent();
-    }
-
-    [HttpDelete("{id}/{gitRef}")]
-    public async Task<IActionResult> DeleteMap(string id, string gitRef)
-    {
-        if (_context.Map == null)
-        {
-            return NotFound();
-        }
-        var map = await _context.Map.SingleOrDefaultAsync(map => map.GitRef == gitRef && map.MapId == id.ToLower());
-        if (map == null)
-        {
-            return NotFound();
-        }
-
-        _context.Map.Remove(map);
-        await _context.SaveChangesAsync();
-
-        return NoContent();
-    }
-
-    [HttpPost("sync")]
-    [Consumes("application/json")]
-    public async Task<IActionResult> SyncMaps(List<string> mapFileNames)
-    {
-        var data = new JobDataMap
-        {
-            {Jobs.SyncMaps.MapListKey, mapFileNames}
-        };
-
-        await _schedulingService.RunJob<Jobs.SyncMaps>(nameof(Jobs.SyncMaps), "Sync", data);
-        return Ok();
     }
 
     private async Task<Map?> FindMapWithGrids(string id, string gitRef)

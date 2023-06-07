@@ -57,6 +57,7 @@ builder.Services.AddScoped<ImageProcessingService>();
 builder.Services.AddScoped<IJobSchedulingService, JobSchedulingService>();
 builder.Services.AddScoped<IMapReaderService, MapReaderServiceService>();
 builder.Services.AddScoped<MapUpdateService>();
+builder.Services.AddScoped<MapService>();
 
 builder.Services.AddSingleton<GithubApiService>();
 builder.Services.AddSingleton<RateLimiterService>();
