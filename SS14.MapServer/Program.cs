@@ -112,6 +112,9 @@ builder.Logging.AddSerilog();
 
 var app = builder.Build();
 
+//Migrate on startup
+new StartupMigrationHelper().Migrate<Context>(app);
+
 Log.Information("Environment: {Environment}", builder.Environment.EnvironmentName);
 
 //Preflight Checks
