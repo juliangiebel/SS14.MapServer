@@ -106,7 +106,7 @@ namespace SS14.MapServer.Migrations
                 CREATE FUNCTION update_timestamp() RETURNS TRIGGER
 	                LANGUAGE plpgsql AS $$
 	                BEGIN
-		                NEW.""LastUpdated"" = CURRENT_DATE;
+		                NEW.""LastUpdated"" = CURRENT_TIMESTAMP;
                             RETURN NEW;
                     END;
                     $$;
