@@ -63,7 +63,7 @@ public sealed class LocalBuildService
         _log.Information("Build finished");
     }
 
-    public async Task Run(string directory, string command, List<string> arguments, CancellationToken cancellationToken = default, bool joinExecutablePath = true)
+    public async Task Run(string directory, string command, List<string> arguments, CancellationToken cancellationToken = default, bool joinExecutablePath = false)
     {
         var executablePath = joinExecutablePath ? Path.Join(directory, command) : command;
 
