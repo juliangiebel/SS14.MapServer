@@ -100,7 +100,7 @@ public sealed class LocalBuildService
     }
     private void SetUpProcess(Process process, string? executable = "dotnet")
     {
-        process.StartInfo.UseShellExecute = false;
+        process.StartInfo.UseShellExecute = true;
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.RedirectStandardError = true;
         process.StartInfo.FileName = executable;
