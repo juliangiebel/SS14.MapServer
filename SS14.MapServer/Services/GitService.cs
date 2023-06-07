@@ -111,7 +111,7 @@ public sealed class GitService
         };
 
         _log.Debug("Pulling latest changes");
-        _buildService.Run(repoDirectory, "git", new List<string> { "pull origin HEAD" }).Wait();
+        _buildService.Run(repoDirectory, "git", new List<string> { "pull origin HEAD" }, CancellationToken.None, false).Wait();
 
         _log.Debug("Updating submodules");
         foreach (var submodule in repository.Submodules)

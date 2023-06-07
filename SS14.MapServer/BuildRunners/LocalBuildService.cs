@@ -63,9 +63,9 @@ public sealed class LocalBuildService
         _log.Information("Build finished");
     }
 
-    public async Task Run(string directory, string command, List<string> arguments, CancellationToken cancellationToken = default)
+    public async Task Run(string directory, string command, List<string> arguments, CancellationToken cancellationToken = default, bool joinExecutablePath = true)
     {
-        var executablePath = Path.Join(directory, command);
+        var executablePath = joinExecutablePath ? Path.Join(directory, command) : command;
 
         using var process = new Process();
         SetUpProcess(process, executablePath);
@@ -76,12 +76,11 @@ public sealed class LocalBuildService
 
         _log.Information("Running: {Command} {Arguments}", command, string.Join(' ', arguments));
 
-        process.BeginErrorReadLine();
-        process.BeginOutputReadLine();
-
         process.Start();
         _log.Debug("Started process");
 
+        process.BeginErrorReadLine();
+        process.BeginOutputReadLine();
         _log.Debug("Waiting for process exit...");
         await process.WaitForExitAsync(cancellationToken).WaitAsync(TimeSpan.FromMinutes(_configuration.ProcessTimeoutMinutes), cancellationToken);
         _log.Debug("Stopped process");
