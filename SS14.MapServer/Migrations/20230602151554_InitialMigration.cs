@@ -142,9 +142,9 @@ namespace SS14.MapServer.Migrations
             migrationBuilder.DropTable(
                 name: "Map");
 
-            migrationBuilder.Sql(@"DROP FUNCTION IF EXISTS update_timestamp;");
             migrationBuilder.Sql(@"DROP TRIGGER IF EXISTS ""Map_Update"";");
             migrationBuilder.Sql(@"DROP TRIGGER IF EXISTS ""Image_Update"";");
+            migrationBuilder.Sql(@"DROP FUNCTION IF EXISTS update_timestamp;");
         }
     }
 }
