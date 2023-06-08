@@ -59,6 +59,11 @@ public sealed class GitService
         return repository.Head.Tip.Sha;
     }
 
+    public static string StripRef(string gitRef)
+    {
+        return gitRef.Split(":").Last();
+    }
+
     private void Clone(string repoUrl, string directory, string gitRef)
     {
         _log.Information("Cloning branch/commit {Ref}...", gitRef);
@@ -107,11 +112,6 @@ public sealed class GitService
         }
 
         _log.Information("Done pulling");
-    }
-
-    private string StripRef(string gitRef)
-    {
-        return gitRef.Split(":").Last();
     }
 
     private bool LogProgress(string? progress)

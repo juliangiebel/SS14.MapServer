@@ -69,7 +69,8 @@ public sealed class MapUpdateService
             _ => throw new ArgumentOutOfRangeException()
         };
 
-        var mapIds = await _mapReaderService.UpdateMapsFromFs(path,  gitRef, cancellationToken);
-        return new MapProcessResult(gitRef, mapIds);
+        var strippedGitRef = GitService.StripRef(gitRef);
+        var mapIds = await _mapReaderService.UpdateMapsFromFs(path,  strippedGitRef, cancellationToken);
+        return new MapProcessResult(strippedGitRef, mapIds);
     }
 }
