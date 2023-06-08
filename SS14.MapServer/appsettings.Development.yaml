@@ -26,4 +26,4 @@ Server:
     Language: "en-US"
 
 Git:
-    Branch: "mapservertest"
+    Branch: "master"
