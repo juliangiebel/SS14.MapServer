@@ -91,23 +91,8 @@ public sealed class GitService
             },
             null);
 
-        _log.Debug("Checking out {Ref}", gitRef);
+        _log.Debug("Checking out {Ref}", StripRef(gitRef));
         Commands.Checkout(repository, StripRef(gitRef));
-        var signature = repository.Config.BuildSignature(DateTimeOffset.Now);
-
-        var pullOptions = new PullOptions
-        {
-            MergeOptions = new MergeOptions()
-            {
-                FailOnConflict = true,
-                OnCheckoutProgress = (message, _, _) => LogProgress(message)
-            },
-            FetchOptions = new FetchOptions
-            {
-                OnTransferProgress = progress => LogProgress($"Indexed: {progress.IndexedObjects} | Received: {progress.ReceivedObjects} of {progress.TotalObjects}"),
-                OnProgress = LogProgress
-            }
-        };
 
         _log.Debug("Pulling latest changes");
         _buildService.Run(repoDirectory, "git", new List<string> { "pull origin HEAD" }).Wait();
