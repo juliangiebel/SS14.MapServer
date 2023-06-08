@@ -100,8 +100,10 @@ public class GitHubWebhookController : ControllerBase
 
         var installation = new InstallationIdentifier(payload.Installation.Id, payload.Repository.Id);
 
+        //Ensure the the ref will always just be the branch name
+        var bareRef = Path.GetFileName(headCommit.Ref);
         var processItem = new ProcessItem(
-            Path.GetFileName(headCommit.Ref),
+            $"pull/{payload.PullRequest.Number}/head:{bareRef}",
             files!,
             // ReSharper disable once AsyncVoidLambda
             async (provider, result) => await OnPrProcessingResult(provider, result, installation, payload.PullRequest),

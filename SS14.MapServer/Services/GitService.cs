@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using LibGit2Sharp;
+﻿using LibGit2Sharp;
 using Serilog;
 using SS14.MapServer.BuildRunners;
 using SS14.MapServer.Configuration;
@@ -70,7 +69,7 @@ public sealed class GitService
         });
 
         using var repository = new Repository(repoDirectory);
-        Commands.Checkout(repository, gitRef);
+        Commands.Checkout(repository, StripRef(gitRef));
         _log.Information("Done cloning");
     }
 
@@ -93,7 +92,7 @@ public sealed class GitService
             null);
 
         _log.Debug("Checking out {Ref}", gitRef);
-        Commands.Checkout(repository, gitRef);
+        Commands.Checkout(repository, StripRef(gitRef));
         var signature = repository.Config.BuildSignature(DateTimeOffset.Now);
 
         var pullOptions = new PullOptions
@@ -125,17 +124,14 @@ public sealed class GitService
         _log.Information("Done pulling");
     }
 
+    private string StripRef(string gitRef)
+    {
+        return gitRef.Split(":").Last();
+    }
+
     private bool LogProgress(string? progress)
     {
         _log.Verbose("Progress: {Progress}", progress);
         return true;
-    }
-
-    private void LogOutput(object _, DataReceivedEventArgs args)
-    {
-        if (args.Data == null)
-            return;
-
-        _log.Debug("{Output}", args.Data);
     }
 }
