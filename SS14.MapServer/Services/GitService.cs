@@ -74,6 +74,17 @@ public sealed class GitService
         });
 
         using var repository = new Repository(repoDirectory);
+
+        Commands.Fetch(
+            repository,
+            "origin",
+            new []{gitRef},
+            new FetchOptions
+            {
+                OnProgress = LogProgress
+            },
+            null);
+
         Commands.Checkout(repository, StripRef(gitRef));
         _log.Information("Done cloning");
     }
