@@ -213,7 +213,7 @@ public class GitHubWebhookController : ControllerBase
         {
             var map = await FindMapWithGrids(mapId);
             //Grab the largest grid
-            map!.Grids.Sort((grid, grid1) => grid.Extent.CompareTo(grid1.Extent));
+            map!.Grids.Sort((grid, grid1) => grid1.Extent.CompareTo(grid.Extent));
             var grid = map.Grids[0];
 
             var url = GetGridImageUrl(mapId, grid.GridId);
