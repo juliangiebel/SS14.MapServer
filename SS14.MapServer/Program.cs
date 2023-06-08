@@ -9,6 +9,7 @@ using SS14.GithubApiHelper.Services;
 using SS14.MapServer;
 using SS14.MapServer.BuildRunners;
 using SS14.MapServer.Configuration;
+using SS14.MapServer.Extensions;
 using SS14.MapServer.Helpers;
 using SS14.MapServer.MapProcessing.Services;
 using SS14.MapServer.Models;
@@ -47,6 +48,9 @@ builder.Services.AddCors(options =>
         policy.AllowCredentials();
     });
 });
+
+//Rate limiting
+builder.Services.AddApiRateLimiting(serverConfiguration);
 
 //DB
 builder.Services.AddDbContext<Context>(opt => opt.UseNpgsql(builder.Configuration.GetConnectionString("default")));
@@ -147,6 +151,7 @@ app.UseResponseCaching();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.MapControllers().RequireAuthorization();
 
 await app.PreloadGithubTemplates();
