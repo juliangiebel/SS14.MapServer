@@ -46,7 +46,7 @@ public sealed class StartupCheckService
                 Log.Error(" - Git.RepositoryUrl is not set");
                 result = false;
             }
-            
+
             if (!Directory.Exists(_processingConfiguration.TargetDirectory))
             {
                 Log.Error(" - Processing.TargetDirectory doesn't exist: {TargetDir}", _processingConfiguration.TargetDirectory);
@@ -56,16 +56,16 @@ public sealed class StartupCheckService
 
         if (result)
             Log.Information(" - Configuration is valid");
-        
+
         return result;
     }
 
     private async Task<bool> CheckBuildServices()
     {
-        Log.Information("Automatic build features are {BuildFeaturesStatus}", _buildConfiguration.Enabled ? "Enabled" : "Disables");
+        Log.Information("Automatic build features are {BuildFeaturesStatus}", _buildConfiguration.Enabled ? "Enabled" : "Disabled");
         if (!_buildConfiguration.Enabled)
             return true;
-        
+
         return _buildConfiguration.Runner switch
         {
             BuildRunnerName.Local => await CheckLocalRunnerPrerequisites(),
@@ -89,14 +89,14 @@ public sealed class StartupCheckService
             Log.Fatal(e, "Couldn't connect to a supported container manager");
             return false;
         }
-        
+
         return true;
     }
 
     private async Task<bool> CheckLocalRunnerPrerequisites()
     {
         Log.Information("Checking DotNet:");
-        
+
         try
         {
             var version = await _localBuildService.GetDotNetVersion();
@@ -107,7 +107,7 @@ public sealed class StartupCheckService
             Log.Fatal(e, "Couldn't determine dotnet version");
             return false;
         }
-        
+
         return true;
     }
 }

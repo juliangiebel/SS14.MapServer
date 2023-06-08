@@ -9,6 +9,8 @@ public sealed class ProcessQueue
 
     public readonly int MaxItemCount;
 
+    public int Count => _queue.Reader.Count;
+
     public ProcessQueue(IConfiguration configuration)
     {
         var processConfiguration = new ProcessingConfiguration();
@@ -26,7 +28,7 @@ public sealed class ProcessQueue
 
     public async Task<bool> TryQueueProcessItem(ProcessItem item)
     {
-        if (_queue.Reader.Count == MaxItemCount)
+        if (Count == MaxItemCount)
             return false;
 
         await _queue.Writer.WriteAsync(item);

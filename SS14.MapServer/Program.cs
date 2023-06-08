@@ -36,14 +36,14 @@ builder.Services.AddControllers(options =>
 });
 
 //Cors
-var corsConfiguration = new ServerConfiguration();
-builder.Configuration.Bind(ServerConfiguration.Name, corsConfiguration);
+var serverConfiguration = new ServerConfiguration();
+builder.Configuration.Bind(ServerConfiguration.Name, serverConfiguration);
 
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins(corsConfiguration.CorsOrigins.ToArray());
+        policy.WithOrigins(serverConfiguration.CorsOrigins.ToArray());
         policy.AllowCredentials();
     });
 });
@@ -135,9 +135,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-if (app.Environment.IsProduction() || app.Environment.IsStaging())
+if ((app.Environment.IsProduction() || app.Environment.IsStaging()) && serverConfiguration.UseHttps)
 {
-    //app.UseHttpsRedirection();
+    app.UseHttpsRedirection();
+    //If this gets disabled by Server->UseHttps then Hsts is usually set up by a reverse proxy
+    app.UseHsts();
 }
 
 app.UseCors();
@@ -148,20 +150,6 @@ app.UseAuthorization();
 app.MapControllers().RequireAuthorization();
 
 await app.PreloadGithubTemplates();
-/*var test = app.Services.GetService<GithubTemplateService>();
-var result = await test?.RenderTemplate("generating_map", new
-{
-    test = "test",
-    changedFiles = new[]
-    {
-        "Resources/Maps/testA.yml",
-        "Resources/Maps/testB.yml",
-    },
-    newFiles = new[]
-    {
-        "Resources/Maps/testC.yml"
-    },
-})!;*/
 
 app.Run();
 return 0;

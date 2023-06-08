@@ -30,6 +30,7 @@ public class GitHubWebhookController : ControllerBase
     private readonly IConfiguration _configuration;
     private readonly GitConfiguration _gitConfiguration = new();
     private readonly ServerConfiguration _serverConfiguration = new();
+    private readonly BuildConfiguration _buildConfiguration = new();
 
     private Context _context;
 
@@ -45,15 +46,19 @@ public class GitHubWebhookController : ControllerBase
         _context = context;
         configuration.Bind(GitConfiguration.Name, _gitConfiguration);
         configuration.Bind(ServerConfiguration.Name, _serverConfiguration);
+        configuration.Bind(BuildConfiguration.Name, _buildConfiguration);
     }
 
     [HttpPost]
     [AllowAnonymous]
-    public async Task Post()
+    public async Task<IActionResult> Post()
     {
+        if (!_buildConfiguration.Enabled)
+            return NotFound("Automated building features are disabled");
+
         Request.EnableBuffering();
         if (!Request.Headers.TryGetValue(GithubEventHeader, out var eventName) || !await GithubWebhookHelper.VerifyWebhook(Request, _configuration))
-            return;
+            return Unauthorized();
 
         var json = await GithubWebhookHelper.RetrievePayload(Request);
         var serializer = new Octokit.Internal.SimpleJsonSerializer();
@@ -67,6 +72,8 @@ public class GitHubWebhookController : ControllerBase
                 await HandlePullRequestEvent(serializer.Deserialize<PullRequestEventPayload>(json));
                 break;
         }
+
+        return Ok();
     }
 
     private async Task HandlePullRequestEvent(PullRequestEventPayload payload)

@@ -8,6 +8,7 @@ public class Context : DbContext
     public DbSet<Map>? Map { get; set; }
     public DbSet<Tile>? Tile { get; set; }
     public DbSet<ImageFile>? Image { get; set; }
+    public DbSet<Grid>? Grid { get; set; }
 
     public DbSet<PullRequestComment>? PullRequestComment { get; set; }
 
