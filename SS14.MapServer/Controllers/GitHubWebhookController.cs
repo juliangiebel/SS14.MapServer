@@ -82,7 +82,7 @@ public class GitHubWebhookController : ControllerBase
             return;
 
         var headCommit = payload.PullRequest.Head;
-        var repository = payload.PullRequest.Head.Repository.CloneUrl;
+        var repository = payload.PullRequest.Base.Repository.CloneUrl;
 
         var enumerable = await CheckFiles(
             payload.Installation.Id,
@@ -169,7 +169,7 @@ public class GitHubWebhookController : ControllerBase
         return mapFileMatchResult.Files.Select(match => match.Path);
     }
 
-    private async Task CreateInitialPrComment(PullRequestEventPayload payload, GitReference baseCommit, List<string> files)
+    private async Task CreateInitialPrComment(PullRequestEventPayload payload, GitReference baseCommit, List<string?> files)
     {
         // ReSharper disable once MethodHasAsyncOverload
         var prComment = _context.PullRequestComment?.Find(

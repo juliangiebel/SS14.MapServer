@@ -25,6 +25,7 @@ public sealed class GitService
     /// </summary>
     /// <param name="workingDirectory"></param>
     /// <param name="gitRef">[Optional] The Ref to pull</param>
+    /// <param name="repoUrl"></param>
     /// <returns></returns>
     public string Sync(string workingDirectory, string? gitRef = null, string? repoUrl = null)
     {
