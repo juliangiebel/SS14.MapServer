@@ -238,18 +238,24 @@ public class MapController : ControllerBase
 
     private async Task<Map?> FindMapWithGrids(string id, string gitRef)
     {
-        return await _context.Map!
+        var map = await _context.Map!
             .Include(map => map.Grids)
             .Where(map => map.GitRef == gitRef && map.MapId == id.ToLower())
             .SingleOrDefaultAsync();
+
+        map?.Grids.Sort((grid, grid1) => grid1.Extent.CompareTo(grid.Extent));
+        return map;
     }
 
     private async Task<Map?> FindMapWithGrids(Guid id)
     {
-        return await _context.Map!
+        var map = await _context.Map!
             .Include(map => map.Grids)
             .Where(map => map.MapGuid.Equals(id))
             .SingleOrDefaultAsync();
+
+        map?.Grids.Sort((grid, grid1) => grid1.Extent.CompareTo(grid.Extent));
+        return map;
     }
 
     private async Task<ActionResult<Map>> CreateMap(Map map)
@@ -285,7 +291,7 @@ public class MapController : ControllerBase
                 $"{_serverConfiguration.Host.Host}:{_serverConfiguration.Host.Port}"
             );
         }
-
+        map.Grids.Sort((grid, grid1) => grid1.Extent.CompareTo(grid.Extent));
         return map;
     }
 }
