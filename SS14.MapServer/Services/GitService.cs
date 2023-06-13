@@ -97,16 +97,7 @@ public sealed class GitService
 
         using var repository = new Repository(repoDirectory);
         _log.Debug("Fetching ref");
-
-        Commands.Fetch(
-            repository,
-            "origin",
-            new []{gitRef},
-            new FetchOptions
-            {
-                OnProgress = LogProgress
-            },
-            null);
+        _buildService.Run(repoDirectory, "git", new List<string> { "fetch origin", gitRef }).Wait();
 
         _log.Debug("Checking out {Ref}", StripRef(gitRef));
         Commands.Checkout(repository, StripRef(gitRef));

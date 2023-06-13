@@ -30,7 +30,7 @@ public sealed class LocalBuildService
     public async Task<string> BuildAndRun(string directory, string command, List<string> arguments, CancellationToken cancellationToken = default)
     {
         await Build(directory, cancellationToken);
-        await Run(directory, command, arguments, cancellationToken, true);
+        await Run(directory, command, arguments, true, cancellationToken);
         return Path.Join(directory, _configuration.RelativeMapFilesPath);
     }
 
@@ -63,7 +63,7 @@ public sealed class LocalBuildService
         _log.Information("Build finished");
     }
 
-    public async Task Run(string directory, string command, List<string> arguments, CancellationToken cancellationToken = default, bool joinExecutablePath = false)
+    public async Task Run(string directory, string command, List<string> arguments, bool joinExecutablePath = false, CancellationToken cancellationToken = default)
     {
         var executablePath = joinExecutablePath ? Path.Join(directory, command) : command;
 
@@ -75,7 +75,9 @@ public sealed class LocalBuildService
         process.ErrorDataReceived += LogOutput;
 
         _log.Information("Running: {Command} {Arguments}", command, string.Join(' ', arguments));
-        process.Start();
+
+        // ReSharper disable once AccessToDisposedClosure
+        await Task.Run(() => process.Start(), cancellationToken).WaitAsync(TimeSpan.FromMinutes(1), cancellationToken);
 
         process.BeginErrorReadLine();
         process.BeginOutputReadLine();
@@ -89,6 +91,7 @@ public sealed class LocalBuildService
             throw new BuildException($"Run timed out {_configuration.MapRendererProjectName}");
         }
 
+        process.Close();
         _log.Information("Run finished");
     }
     private void SetUpProcess(Process process, string? executable = "dotnet")
