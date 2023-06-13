@@ -79,6 +79,9 @@ public sealed class LocalBuildService
         // ReSharper disable once AccessToDisposedClosure
         await Task.Run(() => process.Start(), cancellationToken).WaitAsync(TimeSpan.FromMinutes(1), cancellationToken);
 
+        if (process.HasExited)
+            throw new BuildException($"Run timed out {_configuration.MapRendererProjectName}");
+
         process.BeginErrorReadLine();
         process.BeginOutputReadLine();
         await process.WaitForExitAsync(cancellationToken).WaitAsync(TimeSpan.FromMinutes(_configuration.ProcessTimeoutMinutes), cancellationToken);
