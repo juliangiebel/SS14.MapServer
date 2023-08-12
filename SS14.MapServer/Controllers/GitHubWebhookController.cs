@@ -65,7 +65,8 @@ public class GitHubWebhookController : ControllerBase
 
         var pushEvent = serializer.Deserialize<PushEventPayload>(json);
 
-        if (!_gitConfiguration.RepositoryUrl.Equals(pushEvent.Repository.CloneUrl))
+        var cloneUrl = pushEvent.Repository?.CloneUrl ?? string.Empty;
+        if (cloneUrl != string.Empty &&  !_gitConfiguration.RepositoryUrl.Equals(cloneUrl))
             return new BadRequestObjectResult($"Instance not configured for repository: {pushEvent.Repository.CloneUrl}");
 
         switch (eventName)
