@@ -17,4 +17,5 @@ public class ServerConfiguration
 
     public int RateLimitCount { get; set; } = 20;
     public long RateLimitWindowMinutes { get; set; } = 1;
+    public bool EnableSentry { get; set; }= false;
 }
