@@ -1,5 +1,5 @@
 Serilog:
-  Using: [ "Serilog.Sinks.Console" ]
+  Using: [ "Serilog.Sinks.Console", "Sentry.Serilog" ]
   MinimumLevel:
     Default: "Information"
     Override:
@@ -10,6 +10,7 @@ Serilog:
       Microsoft.AspNetCore.DataProtection: "Error" #This service doesn't use data protection
 
   WriteTo:
+    - Name: Sentry
     - Name: Console
       Args:
         OutputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3} {SourceContext}] {Message:lj}{NewLine}{Exception}"
