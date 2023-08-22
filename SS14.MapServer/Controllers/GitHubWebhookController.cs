@@ -63,6 +63,12 @@ public class GitHubWebhookController : ControllerBase
         var json = await GithubWebhookHelper.RetrievePayload(Request);
         var serializer = new Octokit.Internal.SimpleJsonSerializer();
 
+        var pushEvent = serializer.Deserialize<PushEventPayload>(json);
+
+        var cloneUrl = pushEvent.Repository?.CloneUrl ?? string.Empty;
+        if (cloneUrl != string.Empty &&  !_gitConfiguration.RepositoryUrl.Equals(cloneUrl))
+            return new BadRequestObjectResult($"Instance not configured for repository: {pushEvent.Repository.CloneUrl}");
+
         switch (eventName)
         {
             case "push":
