@@ -97,6 +97,7 @@ public sealed class LocalBuildService
         process.Close();
         _log.Information("Run finished");
     }
+
     private void SetUpProcess(Process process, string? executable = "dotnet")
     {
         process.StartInfo.UseShellExecute = false;

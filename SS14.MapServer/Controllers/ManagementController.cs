@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using SS14.MapServer.Configuration;
 using SS14.MapServer.MapProcessing.Services;
 using SS14.MapServer.Models;
+using SS14.MapServer.Services;
 
 namespace SS14.MapServer.Controllers;
 
@@ -14,15 +15,17 @@ public class ManagementController : ControllerBase
 {
     private readonly Context _context;
     private readonly ProcessQueue _processQueue;
+    private readonly FileManagementService _fileService;
 
     private readonly BuildConfiguration _buildConfiguration = new();
     private readonly GitConfiguration _gitConfiguration = new();
     private readonly ProcessingConfiguration _processingConfiguration = new();
 
-    public ManagementController(Context context, IConfiguration configuration, ProcessQueue processQueue)
+    public ManagementController(Context context, IConfiguration configuration, ProcessQueue processQueue, FileManagementService fileService)
     {
         _context = context;
         _processQueue = processQueue;
+        _fileService = fileService;
         configuration.Bind(BuildConfiguration.Name, _buildConfiguration);
         configuration.Bind(GitConfiguration.Name, _gitConfiguration);
         configuration.Bind(ProcessingConfiguration.Name, _processingConfiguration);
@@ -57,10 +60,18 @@ public class ManagementController : ControllerBase
             Grids = await _context.Grid!.CountAsync(),
             Tiles = await _context.Tile!.CountAsync(),
             GeneralImages = await _context.Image!.CountAsync(),
-            QueuedWork = _processQueue.Count
+            QueuedWork = _processQueue.Count,
+            ImageFilesSize = await _fileService.GetImageDirectoriesFilesSize()
         };
 
         return statistics;
+    }
+
+    [HttpPost("build/clean")]
+    public async Task<IActionResult> CleanBuildDirectories()
+    {
+        var count = await _fileService.CleanBuildDirectories();
+        return new OkObjectResult(count);
     }
 }
 
@@ -83,4 +94,5 @@ public sealed class StatisticsData
     public int? Tiles { get; set; }
     public int? GeneralImages { get; set; }
     public int? QueuedWork { get; set; }
+    public long? ImageFilesSize { get; set; }
 }

@@ -70,6 +70,7 @@ builder.Services.AddSingleton<LocalBuildService>();
 builder.Services.AddSingleton<GitService>();
 builder.Services.AddSingleton<StartupCheckService>();
 builder.Services.AddSingleton<ProcessQueue>();
+builder.Services.AddSingleton<FileManagementService>();
 
 builder.Services.AddHostedService<ProcessQueueHostedService>();
 
