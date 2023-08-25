@@ -160,5 +160,8 @@ app.MapControllers().RequireAuthorization();
 
 await app.PreloadGithubTemplates();
 
+if (serverConfiguration is { EnableSentry: true, EnableSentryTracing: true })
+    app.UseSentryTracing();
+
 app.Run();
 return 0;
