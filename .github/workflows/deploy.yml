@@ -72,7 +72,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   ci-success:
-    name: Build & Test Debug
+    name: Deploy finished
     needs:
       - deploy-sentry
       - deploy-container
