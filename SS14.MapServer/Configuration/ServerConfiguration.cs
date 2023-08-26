@@ -17,4 +17,9 @@ public class ServerConfiguration
 
     public int RateLimitCount { get; set; } = 20;
     public long RateLimitWindowMinutes { get; set; } = 1;
+    public bool EnableSentry { get; set; } = false;
+    /// <summary>
+    /// Enables sentries performance monitoring on endpoints if sentry is enabled
+    /// </summary>
+    public bool EnableSentryTracing { get; set; } = false;
 }

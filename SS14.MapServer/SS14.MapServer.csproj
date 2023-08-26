@@ -5,11 +5,12 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-        <Version>1.0</Version>
+        <Version>1.1</Version>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Docker.DotNet" Version="3.125.15" />
+        <PackageReference Include="JetBrains.Annotations" Version="2023.2.0" />
         <PackageReference Include="JsonModelBinder" Version="2.1.1" />
         <PackageReference Include="LibGit2Sharp" Version="0.27.2" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.5">
@@ -26,6 +27,8 @@
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.4" />
         <PackageReference Include="Octokit" Version="6.0.0" />
         <PackageReference Include="Quartz.AspNetCore" Version="3.6.2" />
+        <PackageReference Include="Sentry.AspNetCore" Version="3.35.1" />
+        <PackageReference Include="Sentry.Serilog" Version="3.35.1" />
         <PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
         <PackageReference Include="SixLabors.ImageSharp" Version="3.0.1" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
@@ -57,7 +60,7 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
     </ItemGroup>
-  
+
     <ItemGroup>
       <_ContentIncludedByDefault Remove="data\git\nuget.config" />
       <_ContentIncludedByDefault Remove="data\git\RobustToolbox\cefglue\CefGlue.Client\app.config" />

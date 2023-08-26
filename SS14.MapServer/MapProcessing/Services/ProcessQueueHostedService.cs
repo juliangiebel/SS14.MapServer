@@ -1,6 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using System.Threading.Channels;
+using Sentry;
 using Serilog;
+using Serilog.Events;
 using SS14.MapServer.Configuration;
 using ILogger = Serilog.ILogger;
 #pragma warning disable CS4014
@@ -61,7 +63,11 @@ public sealed class ProcessQueueHostedService : BackgroundService
                                 processItem.RepositoryUrl,
                                 cancellationToken)
                             .ContinueWith(
-                                task => processItem.OnCompletion.Invoke(_serviceProvider, task.Result),
+                                task =>
+                                {
+                                    HandleTaskExceptions(task);
+                                    processItem.OnCompletion.Invoke(_serviceProvider, task.Result);
+                                },
                                 cancellationToken);
                     }
                     directory.GitRef = processItem.GitRef;
@@ -79,5 +85,26 @@ public sealed class ProcessQueueHostedService : BackgroundService
     {
         _log.Information("{ServiceName} stopped", nameof(ProcessQueueHostedService));
         await base.StopAsync(cancellationToken);
+    }
+
+    private void HandleTaskExceptions(Task task)
+    {
+        var aggException = task.Exception?.Flatten();
+        if (aggException == null)
+            return;
+
+        var sentryNotice = SentrySdk.IsEnabled ? "The exception was sent to sentry." : "";
+        var logLevel = SentrySdk.IsEnabled ? LogEventLevel.Warning : LogEventLevel.Error;
+        foreach (var exception in aggException.InnerExceptions)
+        {
+            _log.Write(
+                logLevel,
+                exception,
+                "An exception occured while processing queued task. {SentryNotice}",
+                sentryNotice);
+
+            if (SentrySdk.IsEnabled)
+                SentrySdk.CaptureException(exception);
+        }
     }
 }

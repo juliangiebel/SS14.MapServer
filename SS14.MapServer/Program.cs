@@ -70,6 +70,7 @@ builder.Services.AddSingleton<LocalBuildService>();
 builder.Services.AddSingleton<GitService>();
 builder.Services.AddSingleton<StartupCheckService>();
 builder.Services.AddSingleton<ProcessQueue>();
+builder.Services.AddSingleton<FileManagementService>();
 
 builder.Services.AddHostedService<ProcessQueueHostedService>();
 
@@ -114,6 +115,9 @@ builder.Services.AddQuartzServer(q => { q.WaitForJobsToComplete = true; });
 builder.Host.UseSerilog((ctx, cfg) => cfg.ReadFrom.Configuration(ctx.Configuration));
 builder.Logging.AddSerilog();
 
+if (serverConfiguration.EnableSentry)
+    builder.WebHost.UseSentry();
+
 var app = builder.Build();
 
 //Migrate on startup
@@ -155,6 +159,12 @@ app.UseRateLimiter();
 app.MapControllers().RequireAuthorization();
 
 await app.PreloadGithubTemplates();
+
+if (serverConfiguration is { EnableSentry: true, EnableSentryTracing: true })
+    app.UseSentryTracing();
+
+var scheduler = app.Services.GetRequiredService<ISchedulerFactory>();
+JobSchedulingService.ScheduleMarkedJobs(scheduler);
 
 app.Run();
 return 0;

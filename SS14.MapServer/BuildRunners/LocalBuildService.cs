@@ -1,12 +1,16 @@
 ﻿using System.Diagnostics;
+using System.Text;
+using System.Text.RegularExpressions;
+using Sentry;
 using Serilog;
 using SS14.MapServer.Configuration;
 using SS14.MapServer.Exceptions;
 using ILogger = Serilog.ILogger;
+// ReSharper disable AccessToDisposedClosure
 
 namespace SS14.MapServer.BuildRunners;
 
-public sealed class LocalBuildService
+public sealed partial class LocalBuildService
 {
     private readonly BuildConfiguration _configuration = new();
     private readonly ILogger _log;
@@ -42,7 +46,9 @@ public sealed class LocalBuildService
 
         var outputDir = Path.Join(directory, _configuration.RelativeOutputPath);
         process.StartInfo.Arguments = "build -c Release";
-        process.OutputDataReceived += LogOutput;
+
+        var logBuffer = new StringBuilder();
+        process.OutputDataReceived += (_, args) => LogOutput(logBuffer, args);
 
         _log.Information("Started building {ProjectName}", _configuration.MapRendererProjectName);
 
@@ -58,7 +64,10 @@ public sealed class LocalBuildService
         }
 
         if (process.ExitCode != 0)
-            throw new BuildException($"Failed building {_configuration.MapRendererProjectName}");
+        {
+            var exception = new BuildException($"Failed building {_configuration.MapRendererProjectName}");
+            ProcessLocalBuildException(logBuffer.ToString(), "build.log", exception);
+        }
 
         _log.Information("Build finished");
     }
@@ -71,12 +80,13 @@ public sealed class LocalBuildService
         SetUpProcess(process, executablePath);
         process.StartInfo.WorkingDirectory = directory;
         process.StartInfo.Arguments = string.Join(' ', arguments);
-        process.OutputDataReceived += LogOutput;
-        process.ErrorDataReceived += LogOutput;
+
+        var logBuffer = new StringBuilder();
+        process.OutputDataReceived += (_, args) => LogOutput(logBuffer, args);
+        process.ErrorDataReceived += (_, args) => LogOutput(logBuffer, args);
 
         _log.Information("Running: {Command} {Arguments}", command, string.Join(' ', arguments));
 
-        // ReSharper disable once AccessToDisposedClosure
         await Task.Run(() => process.Start(), cancellationToken).WaitAsync(TimeSpan.FromMinutes(1), cancellationToken);
 
         if (process.HasExited)
@@ -94,9 +104,18 @@ public sealed class LocalBuildService
             throw new BuildException($"Run timed out {_configuration.MapRendererProjectName}");
         }
 
-        process.Close();
+        var log = logBuffer.ToString();
+        // Bandaid the fact that the map renderer doesn't return an error code when rendering fails
+
+        if (process.ExitCode != 0 || LogErrorRegex().IsMatch(log))
+        {
+            var exception = new BuildException($"Error while running: {command} {string.Join(' ', arguments)}");
+            ProcessLocalBuildException(log, "run.log", exception);
+        }
+
         _log.Information("Run finished");
     }
+
     private void SetUpProcess(Process process, string? executable = "dotnet")
     {
         process.StartInfo.UseShellExecute = false;
@@ -105,11 +124,29 @@ public sealed class LocalBuildService
         process.StartInfo.FileName = executable;
     }
 
-    private void LogOutput(object _, DataReceivedEventArgs args)
+    private void LogOutput(StringBuilder logBuffer, DataReceivedEventArgs args)
     {
         if (args.Data == null)
             return;
 
+        logBuffer.Append($"{args.Data}\n");
         _log.Debug("{Output}", args.Data);
     }
+
+    private void ProcessLocalBuildException(string log, string fileName, Exception exception)
+    {
+        if (!SentrySdk.IsEnabled)
+            throw exception;
+
+        var data = Encoding.UTF8.GetBytes(log);
+        SentrySdk.CaptureException(exception,
+            scope =>
+            {
+
+                scope.AddAttachment(data, fileName, AttachmentType.Default, "text/plain");
+            });
+    }
+
+    [GeneratedRegex("error?|exception")]
+    private static partial Regex LogErrorRegex();
 }
