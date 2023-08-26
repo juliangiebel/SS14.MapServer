@@ -12,9 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Setup Submodule
-        run: |
-          git submodule update --init --recursive
+        with:
+          submodules: recursive
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
@@ -30,9 +29,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Setup Submodule
-        run: |
-          git submodule update --init --recursive
+        with:
+          submodules: recursive
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
