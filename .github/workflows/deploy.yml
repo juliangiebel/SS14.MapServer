@@ -50,7 +50,7 @@ jobs:
         uses: kzrnm/get-net-sdk-project-versions-action@v1.3.0
         id: get-version
         with:
-          proj-path: SS14.MapServer/SS14.MapServer/SS14.MapServer.csproj
+          proj-path: SS14.MapServer/SS14.MapServer.csproj
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
