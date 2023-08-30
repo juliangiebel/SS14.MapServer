@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Net.Http.Headers;
 using MimeTypes;
@@ -22,6 +23,7 @@ public class TileController : ControllerBase
 
     [AllowAnonymous]
     [ResponseCache(CacheProfileName = "Default")]
+    [DisableRateLimiting]
     [HttpGet("{id:guid}/{gridId:int}/{x:int}/{y:int}/{z:int}")]
     [ProducesResponseType(200, Type = typeof(FileStreamResult))]
     [Produces("image/jpg", "image/png", "image/webp", "application/json")]
@@ -35,7 +37,7 @@ public class TileController : ControllerBase
         if (map == null)
             return new NotFoundResult();
 
-        var hash = $@"""{map.MapGuid:N}{map.LastUpdated.GetHashCode():X}""";
+        var hash = $@"""{map.MapGuid:N}{x + y + gridId + map.LastUpdated.GetHashCode():X}""";
         if (CheckETags(hash, out var result))
             return result;
 
@@ -48,7 +50,7 @@ public class TileController : ControllerBase
 
         var tile = await _context.Tile!.FindAsync(id, gridId, x, y);
 
-        if (tile == null || !System.IO.File.Exists(grid.Path))
+        if (tile == null || !System.IO.File.Exists(tile.Path))
             return new NotFoundResult();
 
         var file = new FileStream(tile.Path, FileMode.Open);

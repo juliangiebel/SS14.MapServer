@@ -3,7 +3,7 @@
 public sealed class BuildConfiguration
 {
     public const string Name = "Build";
-    
+
     public bool Enabled { get; set; } = true;
     public BuildRunnerName Runner { get; set; } = BuildRunnerName.Local;
     public string RelativeOutputPath { get; set; } = "bin";

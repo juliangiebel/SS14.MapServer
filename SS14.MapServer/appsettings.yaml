@@ -4,6 +4,7 @@ Serilog:
     Default: "Information"
     Override:
       SS14: "Information"
+      SS14.MapServer.Security.ApiKeyHandler: "Error"
       Microsoft: "Warning"
       Microsoft.Hosting.Lifetime: "Information"
       Microsoft.AspNetCore: "Warning"

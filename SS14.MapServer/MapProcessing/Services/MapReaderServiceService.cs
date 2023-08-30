@@ -93,7 +93,7 @@ public sealed class MapReaderServiceService : IMapReaderService
                     GridId = gridData.GridId,
                     Extent = gridData.Extent,
                     Offset = gridData.Offset,
-                    Tiled = gridData.Tiled,
+                    Tiled = true//gridData.Tiled,
                 };
                 map.Grids.Add(grid);
                 _context.Add(grid);
@@ -108,7 +108,7 @@ public sealed class MapReaderServiceService : IMapReaderService
 
             if (newMap)
             {
-                var id = (await _context.Map.AddAsync(map, cancellationToken)).Entity.MapGuid;
+                var id = (await _context.Map!.AddAsync(map, cancellationToken)).Entity.MapGuid;
                 ids.Add(id);
             }
             else

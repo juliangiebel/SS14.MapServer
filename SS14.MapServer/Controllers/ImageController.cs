@@ -133,7 +133,7 @@ public class ImageController : ControllerBase
         if (map == null)
             return new NotFoundResult();
 
-        var hash = $@"""{map.MapGuid:N}{map.LastUpdated.GetHashCode():X}""";
+        var hash = $@"""{map.MapGuid:N}{gridId + map.LastUpdated.GetHashCode():X}""";
         if (CheckETags(hash, out var result))
             return result;
 

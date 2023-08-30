@@ -10,7 +10,7 @@ public sealed class ImageProcessingService
     public async Task<List<Tile>> TileImage(Guid mapGuid, int gridId, string sourcePath, string targetPath, int tileSize)
     {
         if (tileSize < MinTileSize)
-            throw new ArgumentOutOfRangeException($"Provider tile size {tileSize} is smaller than minimum tile size {MinTileSize}");
+            throw new ArgumentOutOfRangeException($"Provided tile size {tileSize} is smaller than minimum tile size {MinTileSize}");
 
         if (!Path.HasExtension(sourcePath))
             throw new Exception($"Invalid image path: {sourcePath}");
