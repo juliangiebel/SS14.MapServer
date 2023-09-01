@@ -12,8 +12,9 @@ public class Tile
     public int Y { get; set; }
     public int Size { get; set; }
     public string Path { get; set; }
+    public byte[] Preview { get; set; }
 
-    public Tile(Guid mapGuid, int gridId, int x, int y, int size, string path)
+    public Tile(Guid mapGuid, int gridId, int x, int y, int size, string path, byte[] preview)
     {
         MapGuid = mapGuid;
         GridId = gridId;
@@ -21,5 +22,6 @@ public class Tile
         Y = y;
         Size = size;
         Path = path;
+        Preview = preview;
     }
 }

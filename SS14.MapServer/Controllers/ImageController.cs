@@ -141,8 +141,8 @@ public class ImageController : ControllerBase
         if (grid == null)
             return new NotFoundResult();
 
-        if (grid.Tiled)
-            return new BadRequestObjectResult(new ApiErrorMessage($"Grid image with id {gridId} is a tiled image"));
+        //if (grid.Tiled)
+        //    return new BadRequestObjectResult(new ApiErrorMessage($"Grid image with id {gridId} is a tiled image"));
 
         if (!System.IO.File.Exists(grid.Path))
             return new NotFoundResult();

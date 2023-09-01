@@ -69,6 +69,9 @@ public sealed class MapReaderServiceService : IMapReaderService
             map.Attribution = data.Attribution;
             map.ParallaxLayers = data.ParallaxLayers;
 
+            if (newMap)
+                await _context.Map!.AddAsync(map, cancellationToken);
+
             //Remove previous grids if there are any
             if (map.Grids.Count > 0)
                 _context.RemoveRange(map.Grids);
@@ -93,7 +96,8 @@ public sealed class MapReaderServiceService : IMapReaderService
                     GridId = gridData.GridId,
                     Extent = gridData.Extent,
                     Offset = gridData.Offset,
-                    Tiled = true//gridData.Tiled,
+                    //Only tile maps used by the viewer and prevent small grids from being tiled
+                    Tiled = gridData.Extent.GetArea() >= 65536 && gitRef == "master"//gridData.Tiled,
                 };
                 map.Grids.Add(grid);
                 _context.Add(grid);
@@ -106,16 +110,7 @@ public sealed class MapReaderServiceService : IMapReaderService
                 await stream.DisposeAsync();
             }
 
-            if (newMap)
-            {
-                var id = (await _context.Map!.AddAsync(map, cancellationToken)).Entity.MapGuid;
-                ids.Add(id);
-            }
-            else
-            {
-                ids.Add(map.MapGuid);
-            }
-
+            ids.Add(map.MapGuid);
             await _context.SaveChangesAsync(cancellationToken);
         }
 

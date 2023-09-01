@@ -51,16 +51,10 @@ public sealed class FileUploadService
             if (!grids.TryGetValue(gridId, out var grid))
                 throw new ArgumentException($"Grid id ${gridId} not present in map ${map.MapId}");
 
-            string path;
+            var path = await UploadGridImage(mapPath, gridId, image);
 
             if (grid.Tiled)
-            {
-                path = await UploadAndProcessTiledImage(map.MapGuid, mapPath, gridId, image, grid.TileSize);
-            }
-            else
-            {
-                path = await UploadGridImage(mapPath, gridId, image);
-            }
+                await UploadAndProcessTiledImage(map.MapGuid, mapPath, gridId, image, grid.TileSize);
 
             grid.Path = path;
         }
