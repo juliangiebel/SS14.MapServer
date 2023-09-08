@@ -38,12 +38,10 @@ public sealed class GitService
         if (!Path.IsPathRooted(repoDirectory))
             repoDirectory = Path.Join(Directory.GetCurrentDirectory(), repoDirectory);
 
-
         if (!Directory.Exists(repoDirectory))
             Clone(repoUrl, repoDirectory, gitRef);
 
         Pull(repoDirectory, gitRef);
-
 
         return repoDirectory;
     }
@@ -96,6 +94,11 @@ public sealed class GitService
         _log.Debug("Opening repository in: {RepositoryPath}", repoDirectory);
 
         using var repository = new Repository(repoDirectory);
+        //Set a dummy identity
+        _log.Debug("Setting identity");
+        repository.Config.Set("user.name", "ss14.mapserver");
+        repository.Config.Set("user.email", "git@mapserver.localhost");
+
         _log.Debug("Fetching ref");
         _buildService.Run(repoDirectory, "git", new List<string> { "fetch origin", gitRef }).Wait();
 
@@ -103,7 +106,7 @@ public sealed class GitService
         Commands.Checkout(repository, StripRef(gitRef));
 
         _log.Debug("Pulling latest changes");
-        _buildService.Run(repoDirectory, "git", new List<string> { "pull origin HEAD" }).Wait();
+        _buildService.Run(repoDirectory, "git", new List<string> { "pull origin HEAD --ff-only" }).Wait();
 
         _log.Debug("Updating submodules");
         foreach (var submodule in repository.Submodules)
