@@ -6,7 +6,7 @@ namespace SS14.MapServer.Tests;
 
 public class ImageProcessingServiceTests
 {
-    private const string ResourcePath = "resources\\tiling_test_source.png";
+    private const string ResourcePath = "resources/tiling_test_source.png";
     private const string OutputPath = "test";
 
     private ImageProcessingService? _processingService;

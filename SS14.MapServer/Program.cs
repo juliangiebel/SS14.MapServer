@@ -160,5 +160,11 @@ app.MapControllers().RequireAuthorization();
 
 await app.PreloadGithubTemplates();
 
+if (serverConfiguration is { EnableSentry: true, EnableSentryTracing: true })
+    app.UseSentryTracing();
+
+var scheduler = app.Services.GetRequiredService<ISchedulerFactory>();
+JobSchedulingService.ScheduleMarkedJobs(scheduler);
+
 app.Run();
 return 0;

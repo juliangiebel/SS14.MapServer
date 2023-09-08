@@ -10,6 +10,7 @@
 
     <ItemGroup>
         <PackageReference Include="Docker.DotNet" Version="3.125.15" />
+        <PackageReference Include="JetBrains.Annotations" Version="2023.2.0" />
         <PackageReference Include="JsonModelBinder" Version="2.1.1" />
         <PackageReference Include="LibGit2Sharp" Version="0.27.2" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.5">
