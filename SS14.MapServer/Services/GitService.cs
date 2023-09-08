@@ -108,6 +108,9 @@ public sealed class GitService
         _log.Debug("Updating submodules");
         foreach (var submodule in repository.Submodules)
         {
+            if (submodule.UpdateRule == SubmoduleUpdate.None)
+                continue;
+
             repository.Submodules.Update(submodule.Name, new SubmoduleUpdateOptions
             {
                 OnProgress = LogProgress
