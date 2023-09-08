@@ -1,4 +1,5 @@
 ﻿using LibGit2Sharp;
+using LibGit2Sharp.Handlers;
 using Serilog;
 using SS14.MapServer.BuildRunners;
 using SS14.MapServer.Configuration;
@@ -100,7 +101,7 @@ public sealed class GitService
         repository.Config.Set("user.email", "git@mapserver.localhost");
 
         _log.Debug("Fetching ref");
-        _buildService.Run(repoDirectory, "git", new List<string> { "fetch origin", gitRef }).Wait();
+        _buildService.Run(repoDirectory, "git", new List<string> { "fetch -fu origin", gitRef }).Wait();
 
         _log.Debug("Checking out {Ref}", StripRef(gitRef));
         Commands.Checkout(repository, StripRef(gitRef));
