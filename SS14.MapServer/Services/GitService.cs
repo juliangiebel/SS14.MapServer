@@ -67,7 +67,9 @@ public sealed class GitService
     private void Clone(string repoUrl, string directory, string gitRef)
     {
         _log.Information("Cloning branch/commit {Ref}...", gitRef);
-        var repoDirectory = Repository.Clone(repoUrl, directory, new CloneOptions
+
+
+        /*var repoDirectory = Repository.Clone(repoUrl, directory, new CloneOptions
         {
             RecurseSubmodules = true,
             OnProgress = LogProgress
@@ -85,7 +87,7 @@ public sealed class GitService
             },
             null);
 
-        Commands.Checkout(repository, StripRef(gitRef));
+        Commands.Checkout(repository, StripRef(gitRef));*/
         _log.Information("Done cloning");
     }
 
@@ -95,10 +97,16 @@ public sealed class GitService
         _log.Debug("Opening repository in: {RepositoryPath}", repoDirectory);
 
         using var repository = new Repository(repoDirectory);
-        //Set a dummy identity
+        //Set an identity
         _log.Debug("Setting identity");
-        repository.Config.Set("user.name", "ss14.mapserver");
-        repository.Config.Set("user.email", "git@mapserver.localhost");
+        repository.Config.Set("user.name", _configuration.Identity.Name);
+        repository.Config.Set("user.email", _configuration.Identity.Email);
+
+        if (_configuration.SshCommand != null)
+        {
+            _log.Debug("Setting ssh command");
+            repository.Config.Set("core.sshcommand", _configuration.SshCommand);
+        }
 
         _log.Debug("Fetching ref");
         _buildService.Run(repoDirectory, "git", new List<string> { "fetch -fu origin", gitRef }).Wait();
