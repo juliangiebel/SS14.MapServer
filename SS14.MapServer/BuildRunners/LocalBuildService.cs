@@ -72,7 +72,7 @@ public sealed partial class LocalBuildService
         _log.Information("Build finished");
     }
 
-    public async Task Run(string directory, string command, List<string> arguments, bool joinExecutablePath = false, CancellationToken cancellationToken = default)
+    public async Task<string> Run(string directory, string command, List<string> arguments, bool joinExecutablePath = false, CancellationToken cancellationToken = default)
     {
         var executablePath = joinExecutablePath ? Path.Join(directory, command) : command;
 
@@ -114,6 +114,7 @@ public sealed partial class LocalBuildService
         }
 
         _log.Information("Run finished");
+        return log;
     }
 
     private void SetUpProcess(Process process, string? executable = "dotnet")
@@ -147,6 +148,6 @@ public sealed partial class LocalBuildService
             });
     }
 
-    [GeneratedRegex("error?|exception")]
+    [GeneratedRegex("error?|exception|fatal")]
     private static partial Regex LogErrorRegex();
 }
