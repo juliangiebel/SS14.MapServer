@@ -51,7 +51,7 @@ public sealed class FileManagementService
         foreach (var directory in poolDirectory.GetDirectories())
         {
             var files = _processingConfiguration.JunkFilePatterns
-                .SelectMany(pattern => directory.EnumerateFiles(pattern, SearchOption.AllDirectories));
+                .SelectMany(pattern => directory.EnumerateFiles(pattern, SearchOption.TopDirectoryOnly));
 
             foreach (var file in files)
             {
