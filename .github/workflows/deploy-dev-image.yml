@@ -1,8 +1,9 @@
-﻿name: Deploy
+﻿name: Dev Deploy
 
 on:
-  push:
-    branches: [ "master" ]
+  workflow_dispatch:
+    branches:
+      - development
 
 env:
   REGISTRY: ghcr.io
@@ -60,8 +61,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest
-            type=raw,value=${{steps.get-version.outputs.version}}
+            type=raw,value=development
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v4.1.1
