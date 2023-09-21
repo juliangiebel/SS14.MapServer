@@ -286,7 +286,7 @@ public class GitHubWebhookController : ControllerBase
     {
         //Can't access Url.Action here
         return
-            $"{_serverConfiguration.Host.Scheme}://{_serverConfiguration.Host.Host}:{_serverConfiguration.Host.Port}/api/Image/grid/{mapGuid}/{gridId}";
+            $"{_serverConfiguration.Host.Scheme}://{_serverConfiguration.Host.Host}:{_serverConfiguration.Host.Port}{_serverConfiguration.PathBase}/api/Image/grid/{mapGuid}/{gridId}";
     }
 }
 
