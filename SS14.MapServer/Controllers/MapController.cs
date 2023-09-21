@@ -288,7 +288,7 @@ public class MapController : ControllerBase
                 "Image",
                 new { id = map.MapGuid, gridId = grid.GridId },
                 _serverConfiguration.Host.Scheme,
-                $"{_serverConfiguration.Host.Host}:{_serverConfiguration.Host.Port}"
+                $"{_serverConfiguration.Host.Host}:{_serverConfiguration.Host.Port}{_serverConfiguration.PathBase}"
             );
         }
         map.Grids.Sort((grid, grid1) => grid1.Extent.CompareTo(grid.Extent));
