@@ -11,14 +11,16 @@ public sealed class StartupCheckService
     private readonly BuildConfiguration _buildConfiguration = new();
     private readonly GitConfiguration _gitConfiguration = new();
     private readonly ProcessingConfiguration _processingConfiguration = new();
+    private readonly GitService _gitService;
     private readonly ContainerService _containerService;
     private readonly LocalBuildService _localBuildService;
 
 
-    public StartupCheckService(ContainerService containerService, IConfiguration configuration, LocalBuildService localBuildService)
+    public StartupCheckService(ContainerService containerService, IConfiguration configuration, LocalBuildService localBuildService, GitService gitService)
     {
         _containerService = containerService;
         _localBuildService = localBuildService;
+        _gitService = gitService;
         configuration.Bind(FilePathsConfiguration.Name, _filePathsConfiguration);
         configuration.Bind(BuildConfiguration.Name, _buildConfiguration);
         configuration.Bind(GitConfiguration.Name, _gitConfiguration);
@@ -66,12 +68,32 @@ public sealed class StartupCheckService
         if (!_buildConfiguration.Enabled)
             return true;
 
-        return _buildConfiguration.Runner switch
+        var result = await CheckGitPrerequisites();
+
+        return result && _buildConfiguration.Runner switch
         {
             BuildRunnerName.Local => await CheckLocalRunnerPrerequisites(),
             BuildRunnerName.Container => await CheckContainerPrerequisites(),
             _ => false
         };
+    }
+
+    private async Task<bool> CheckGitPrerequisites()
+    {
+        Log.Information("Checking Git:");
+
+        try
+        {
+            var version = await _gitService.GetGitVersion();
+            Log.Information(" - Git version: {GitVersion}", version.Replace("\n", ""));
+        }
+        catch (Exception e)
+        {
+            Log.Fatal(e, "Couldn't determine Git version");
+            return false;
+        }
+
+        return true;
     }
 
     private async Task<bool> CheckContainerPrerequisites()

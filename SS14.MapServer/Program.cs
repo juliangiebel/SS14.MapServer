@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -6,7 +7,6 @@ using Quartz;
 using Serilog;
 using SS14.GithubApiHelper.Extensions;
 using SS14.GithubApiHelper.Services;
-using SS14.MapServer;
 using SS14.MapServer.BuildRunners;
 using SS14.MapServer.Configuration;
 using SS14.MapServer.Extensions;
@@ -17,7 +17,6 @@ using SS14.MapServer.Security;
 using SS14.MapServer.Services;
 using SS14.MapServer.Services.Github;
 using SS14.MapServer.Services.Interfaces;
-using Swashbuckle.AspNetCore.SwaggerGen;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,6 +46,12 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(serverConfiguration.CorsOrigins.ToArray());
         policy.AllowCredentials();
     });
+});
+
+//Forwarded headers
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.All;
 });
 
 //Rate limiting
@@ -137,6 +142,16 @@ if (!checkResult)
 Log.Information("Preflight checks passed");
 
 // Configure the HTTP request pipeline.
+if (serverConfiguration.PathBase != null)
+{
+    app.UsePathBase(serverConfiguration.PathBase);
+}
+
+if (serverConfiguration.UseForwardedHeaders)
+{
+    app.UseForwardedHeaders();
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
