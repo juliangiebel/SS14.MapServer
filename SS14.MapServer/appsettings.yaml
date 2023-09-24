@@ -8,6 +8,7 @@ Serilog:
       Microsoft.Hosting.Lifetime: "Information"
       Microsoft.AspNetCore: "Warning"
       Microsoft.AspNetCore.DataProtection: "Error" #This service doesn't use data protection
+      SS14.MapServer.Security.ApiKeyHandler: "Warning" #Ignore "... was not authenticated." spam
 
   WriteTo:
     - Name: Sentry
