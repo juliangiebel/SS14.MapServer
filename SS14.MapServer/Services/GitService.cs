@@ -92,7 +92,7 @@ public sealed class GitService
 
         RunCommand(Path.GetFullPath("./..", directory), "clone --recurse-submodules", sshConfig, repoUrl);
         RunCommand(directory, "fetch -fu origin", gitRef);
-        RunCommand(directory, "checkout", StripRef(gitRef));
+        RunCommand(directory, "checkout --force", StripRef(gitRef));
 
         _log.Information("Done cloning");
     }
@@ -117,7 +117,7 @@ public sealed class GitService
         RunCommand(repoDirectory, "fetch -fu origin", gitRef);
 
         _log.Debug("Checking out {Ref}", StripRef(gitRef));
-        RunCommand(repoDirectory, "checkout", StripRef(gitRef));
+        RunCommand(repoDirectory, "checkout  --force", StripRef(gitRef));
 
         _log.Debug("Pulling latest changes");
         RunCommand(repoDirectory, "pull origin HEAD --ff-only --force");
