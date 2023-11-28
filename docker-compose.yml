@@ -12,6 +12,11 @@ services:
       - ./build:/app/build
     ports:
       - '5218':'80' #Replace 5218 with the port you need
+    # Disables core dumps to prevent maprenderer crashes from filling up your hard drive with over a gigabyte per dump
+    ulimits:
+      core:
+        hard: 0
+        soft: 0
   map_database:
     image: postgres:latest
     environment:
