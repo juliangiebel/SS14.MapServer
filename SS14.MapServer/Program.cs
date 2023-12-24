@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Quartz;
+using Quartz.AspNetCore;
 using Serilog;
 using SS14.GithubApiHelper.Extensions;
 using SS14.GithubApiHelper.Services;
