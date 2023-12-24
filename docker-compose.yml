@@ -11,7 +11,7 @@ services:
       - ./files:/app/data
       - ./build:/app/build
     ports:
-      - '5218':'80' #Replace 5218 with the port you need
+      - 5218:80 #Replace 5218 with the port you need
   map_database:
     image: postgres:latest
     environment:
