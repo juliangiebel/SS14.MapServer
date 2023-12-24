@@ -26,8 +26,8 @@
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.11" />
         <PackageReference Include="Octokit" Version="9.0.0" />
         <PackageReference Include="Quartz.AspNetCore" Version="3.8.0" />
-        <PackageReference Include="Sentry.AspNetCore" Version="4.0.0-beta.6" />
-        <PackageReference Include="Sentry.Serilog" Version="4.0.0-beta.6" />
+        <PackageReference Include="Sentry.AspNetCore" Version="3.41.3" />
+        <PackageReference Include="Sentry.Serilog" Version="3.41.3" />
         <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
         <PackageReference Include="SixLabors.ImageSharp" Version="3.1.1" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
