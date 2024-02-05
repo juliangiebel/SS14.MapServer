@@ -120,7 +120,7 @@ public sealed class GitService
         RunCommand(repoDirectory, "checkout  --force", StripRef(gitRef));
 
         _log.Debug("Pulling latest changes");
-        RunCommand(repoDirectory, "pull origin HEAD --ff-only --force");
+        RunCommand(repoDirectory, "pull origin --ff-only --force", StripRef(gitRef));
 
         _log.Debug("Updating submodules");
         RunCommand(repoDirectory, "submodule update --init --recursive");
