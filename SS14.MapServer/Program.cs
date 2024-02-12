@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using Npgsql;
 using Quartz;
+using Quartz.AspNetCore;
 using Serilog;
 using SS14.GithubApiHelper.Extensions;
 using SS14.GithubApiHelper.Services;
@@ -58,7 +60,13 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 builder.Services.AddApiRateLimiting(serverConfiguration);
 
 //DB
-builder.Services.AddDbContext<Context>(opt => opt.UseNpgsql(builder.Configuration.GetConnectionString("default")));
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(builder.Configuration.GetConnectionString("default"));
+dataSourceBuilder.EnableDynamicJson();
+await using var dataSource = dataSourceBuilder.Build();
+builder.Services.AddDbContext<Context>(opt =>
+{
+    opt.UseNpgsql(dataSource);
+});
 
 //Services
 builder.Services.AddScoped<FileUploadService>();

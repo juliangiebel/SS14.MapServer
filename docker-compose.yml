@@ -11,7 +11,7 @@ services:
       - ./files:/app/data
       - ./build:/app/build
     ports:
-      - '5218':'80' #Replace 5218 with the port you need
+      - 5218:80 #Replace 5218 with the port you need
     # Disables core dumps to prevent maprenderer crashes from filling up your hard drive with over a gigabyte per dump
     ulimits:
       core:
