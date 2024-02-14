@@ -118,7 +118,7 @@ public sealed class GitService
 
         _log.Debug("Checking out {Ref}", StripRef(gitRef));
         RunCommand(repoDirectory, "checkout --quiet --force FETCH_HEAD");
-        
+
         _log.Debug("Updating submodules");
         RunCommand(repoDirectory, "submodule update --init --recursive");
 
