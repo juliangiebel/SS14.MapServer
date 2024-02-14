@@ -13,6 +13,7 @@ namespace SS14.MapServer.MapProcessing.Services;
 public sealed class MapReaderServiceService : IMapReaderService
 {
     private readonly BuildConfiguration _buildConfiguration = new();
+    private readonly GitConfiguration _gitConfiguration = new();
     private readonly FileUploadService _fileUploadService;
     private readonly Context _context;
 
@@ -22,9 +23,10 @@ public sealed class MapReaderServiceService : IMapReaderService
         _context = context;
 
         configuration.Bind(BuildConfiguration.Name, _buildConfiguration);
+        configuration.Bind(GitConfiguration.Name, _gitConfiguration);
     }
 
-    public async Task<IList<Guid>> UpdateMapsFromFs(string path, string gitRef = "master", CancellationToken cancellationToken = default)
+    public async Task<IList<Guid>> UpdateMapsFromFs(string path, string gitRef, CancellationToken cancellationToken = default)
     {
         if (!Directory.Exists(path))
             throw new DirectoryNotFoundException($"Map import path not found: {path}");
@@ -97,7 +99,7 @@ public sealed class MapReaderServiceService : IMapReaderService
                     Extent = gridData.Extent,
                     Offset = gridData.Offset,
                     //Only tile maps used by the viewer and prevent small grids from being tiled
-                    Tiled = gridData.Extent.GetArea() >= 65536 && gitRef == "master"//gridData.Tiled,
+                    Tiled = gridData.Extent.GetArea() >= 65536 && gitRef == _gitConfiguration.Branch
                 };
                 map.Grids.Add(grid);
                 _context.Add(grid);
