@@ -1,4 +1,4 @@
-﻿using LibGit2Sharp;
+﻿using System.Diagnostics;
 using Serilog;
 using SS14.MapServer.BuildRunners;
 using SS14.MapServer.Configuration;
@@ -8,6 +8,8 @@ namespace SS14.MapServer.Services;
 
 public sealed class GitService
 {
+    private const string GitCommand = "git";
+
     private readonly LocalBuildService _buildService;
 
     private readonly GitConfiguration _configuration = new();
@@ -21,12 +23,28 @@ public sealed class GitService
     }
 
     /// <summary>
-    ///
+    /// Gets the git version. Used for determining it git is installed
+    /// </summary>
+    public async Task<string> GetGitVersion(CancellationToken cancellationToken = default)
+    {
+        using var process = new Process();
+        process.StartInfo.UseShellExecute = false;
+        process.StartInfo.RedirectStandardOutput = true;
+        process.StartInfo.RedirectStandardError = true;
+        process.StartInfo.FileName = GitCommand;
+        process.StartInfo.Arguments = "--version";
+        process.Start();
+        await process.WaitForExitAsync(cancellationToken);
+        return await process.StandardOutput.ReadToEndAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Clones the repo if it hasn't been cloned yet and pulls the provided git ref or the current branch
     /// </summary>
     /// <param name="workingDirectory"></param>
     /// <param name="gitRef">[Optional] The Ref to pull</param>
     /// <param name="repoUrl"></param>
-    /// <returns></returns>
+    /// <returns>The directory the repository is in</returns>
     public string Sync(string workingDirectory, string? gitRef = null, string? repoUrl = null)
     {
         gitRef ??= _configuration.Branch;
@@ -38,12 +56,10 @@ public sealed class GitService
         if (!Path.IsPathRooted(repoDirectory))
             repoDirectory = Path.Join(Directory.GetCurrentDirectory(), repoDirectory);
 
-
         if (!Directory.Exists(repoDirectory))
             Clone(repoUrl, repoDirectory, gitRef);
 
         Pull(repoDirectory, gitRef);
-
 
         return repoDirectory;
     }
@@ -56,8 +72,9 @@ public sealed class GitService
     /// <exception cref="NotImplementedException"></exception>
     public string GetRepoCommitHash(string directory)
     {
-        using var repository = new Repository(directory);
-        return repository.Head.Tip.Sha;
+        var task = _buildService.Run(directory, GitCommand, new List<string> { "rev-parse HEAD" });
+        task.Wait();
+        return task.Result;
     }
 
     public static string StripRef(string gitRef)
@@ -68,25 +85,15 @@ public sealed class GitService
     private void Clone(string repoUrl, string directory, string gitRef)
     {
         _log.Information("Cloning branch/commit {Ref}...", gitRef);
-        var repoDirectory = Repository.Clone(repoUrl, directory, new CloneOptions
-        {
-            RecurseSubmodules = true,
-            OnProgress = LogProgress
-        });
 
-        using var repository = new Repository(repoDirectory);
+        var sshConfig = _configuration.SshCommand != null
+            ? $"--config core.sshcommand=\"{_configuration.SshCommand}\""
+            : "";
 
-        Commands.Fetch(
-            repository,
-            "origin",
-            new []{gitRef},
-            new FetchOptions
-            {
-                OnProgress = LogProgress
-            },
-            null);
+        RunCommand(Path.GetFullPath("./..", directory), "clone --recurse-submodules", sshConfig, repoUrl);
+        RunCommand(directory, "fetch -fu origin", gitRef);
+        RunCommand(directory, "checkout --force", StripRef(gitRef));
 
-        Commands.Checkout(repository, StripRef(gitRef));
         _log.Information("Done cloning");
     }
 
@@ -95,31 +102,36 @@ public sealed class GitService
         _log.Information( "Pulling branch/commit {Ref}...", gitRef);
         _log.Debug("Opening repository in: {RepositoryPath}", repoDirectory);
 
-        using var repository = new Repository(repoDirectory);
+        //Set an identity
+        _log.Debug("Setting identity");
+        RunCommand(repoDirectory, "config user.name", $"\"{_configuration.Identity.Name}\"");
+        RunCommand(repoDirectory, "config user.email", $"\"{_configuration.Identity.Email}\"");
+
+        if (_configuration.SshCommand != null)
+        {
+            _log.Debug("Setting ssh command");
+            RunCommand(repoDirectory, "config core.sshcommand", $"\"{_configuration.SshCommand}\"");
+        }
+
         _log.Debug("Fetching ref");
-        _buildService.Run(repoDirectory, "git", new List<string> { "fetch origin", gitRef }).Wait();
+        RunCommand(repoDirectory, "fetch -fu origin", gitRef);
 
         _log.Debug("Checking out {Ref}", StripRef(gitRef));
-        Commands.Checkout(repository, StripRef(gitRef));
+        RunCommand(repoDirectory, "checkout  --force", StripRef(gitRef));
 
         _log.Debug("Pulling latest changes");
-        _buildService.Run(repoDirectory, "git", new List<string> { "pull origin HEAD" }).Wait();
+        RunCommand(repoDirectory, "pull origin --ff-only --force", StripRef(gitRef));
 
         _log.Debug("Updating submodules");
-        foreach (var submodule in repository.Submodules)
-        {
-            repository.Submodules.Update(submodule.Name, new SubmoduleUpdateOptions
-            {
-                OnProgress = LogProgress
-            });
-        }
+        RunCommand(repoDirectory, "submodule update --init --recursive");
 
         _log.Information("Done pulling");
     }
 
-    private bool LogProgress(string? progress)
+    private string RunCommand(string directory, params string[] arguments)
     {
-        _log.Verbose("Progress: {Progress}", progress);
-        return true;
+        var task = _buildService.Run(directory, GitCommand, new List<string>(arguments));
+        task.Wait();
+        return task.Result;
     }
 }

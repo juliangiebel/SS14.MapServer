@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using Npgsql;
 using Quartz;
+using Quartz.AspNetCore;
 using Serilog;
 using SS14.GithubApiHelper.Extensions;
 using SS14.GithubApiHelper.Services;
-using SS14.MapServer;
 using SS14.MapServer.BuildRunners;
 using SS14.MapServer.Configuration;
 using SS14.MapServer.Extensions;
@@ -17,7 +19,6 @@ using SS14.MapServer.Security;
 using SS14.MapServer.Services;
 using SS14.MapServer.Services.Github;
 using SS14.MapServer.Services.Interfaces;
-using Swashbuckle.AspNetCore.SwaggerGen;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,11 +50,23 @@ builder.Services.AddCors(options =>
     });
 });
 
+//Forwarded headers
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.All;
+});
+
 //Rate limiting
 builder.Services.AddApiRateLimiting(serverConfiguration);
 
 //DB
-builder.Services.AddDbContext<Context>(opt => opt.UseNpgsql(builder.Configuration.GetConnectionString("default")));
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(builder.Configuration.GetConnectionString("default"));
+dataSourceBuilder.EnableDynamicJson();
+await using var dataSource = dataSourceBuilder.Build();
+builder.Services.AddDbContext<Context>(opt =>
+{
+    opt.UseNpgsql(dataSource);
+});
 
 //Services
 builder.Services.AddScoped<FileUploadService>();
@@ -137,6 +150,16 @@ if (!checkResult)
 Log.Information("Preflight checks passed");
 
 // Configure the HTTP request pipeline.
+if (serverConfiguration.PathBase != null)
+{
+    app.UsePathBase(serverConfiguration.PathBase);
+}
+
+if (serverConfiguration.UseForwardedHeaders)
+{
+    app.UseForwardedHeaders();
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -159,6 +182,12 @@ app.UseRateLimiter();
 app.MapControllers().RequireAuthorization();
 
 await app.PreloadGithubTemplates();
+
+if (serverConfiguration is { EnableSentry: true, EnableSentryTracing: true })
+    app.UseSentryTracing();
+
+var scheduler = app.Services.GetRequiredService<ISchedulerFactory>();
+JobSchedulingService.ScheduleMarkedJobs(scheduler);
 
 app.Run();
 return 0;

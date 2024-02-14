@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Web;
 using BrunoZell.ModelBinding;
@@ -196,11 +197,12 @@ public class MapController : ControllerBase
 
     [HttpPost("sync")]
     [Consumes("application/json")]
-    public async Task<IActionResult> SyncMaps(List<string> mapFileNames)
+    public async Task<IActionResult> SyncMaps(List<string>? mapFileNames, bool syncAll)
     {
         var data = new JobDataMap
         {
-            {Jobs.SyncMaps.MapListKey, mapFileNames}
+            {Jobs.SyncMaps.MapListKey, mapFileNames ?? new List<string>() },
+            {Jobs.SyncMaps.SyncAllKey, syncAll}
         };
 
         await _schedulingService.RunJob<Jobs.SyncMaps>(nameof(Jobs.SyncMaps), "Sync", data);
@@ -288,7 +290,7 @@ public class MapController : ControllerBase
                 "Image",
                 new { id = map.MapGuid, gridId = grid.GridId },
                 _serverConfiguration.Host.Scheme,
-                $"{_serverConfiguration.Host.Host}:{_serverConfiguration.Host.Port}"
+                $"{_serverConfiguration.Host.Host}:{_serverConfiguration.Host.Port}{_serverConfiguration.PathBase}"
             );
 
             if (grid.Tiled)

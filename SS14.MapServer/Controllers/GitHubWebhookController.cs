@@ -1,18 +1,15 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Collections.Immutable;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileSystemGlobbing;
-using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
-using Microsoft.IdentityModel.Tokens;
 using Octokit;
 using SS14.GithubApiHelper.Helpers;
 using SS14.MapServer.Configuration;
-using SS14.MapServer.Helpers;
 using SS14.MapServer.MapProcessing;
 using SS14.MapServer.MapProcessing.Services;
 using SS14.MapServer.Models;
 using SS14.MapServer.Models.Entities;
-using SS14.MapServer.Services;
 using SS14.MapServer.Services.Github;
 
 namespace SS14.MapServer.Controllers;
@@ -123,10 +120,12 @@ public class GitHubWebhookController : ControllerBase
         if (!payload.Ref.Equals(GitBranchRefPrefix + _gitConfiguration.Branch))
             return;
 
-        //if (!_gitConfiguration.RetrieveMapFilesFromDiff)
-        //{
-            //TODO: Add a way to just render all maps so the instance doesn'T have to be registered as a github app.
-        //}
+        if (!_gitConfiguration.RetrieveMapFilesFromDiff)
+        {
+            var processAllItem = new ProcessItem(Path.GetFileName(payload.Ref), ImmutableList<string>.Empty, (_, _) => { }, SyncAll: true);
+            await _processQueue.TryQueueProcessItem(processAllItem);
+            return;
+        }
 
         var enumerable = await CheckFiles(
             payload.Installation.Id,
@@ -286,7 +285,7 @@ public class GitHubWebhookController : ControllerBase
     {
         //Can't access Url.Action here
         return
-            $"{_serverConfiguration.Host.Scheme}://{_serverConfiguration.Host.Host}:{_serverConfiguration.Host.Port}/api/Image/grid/{mapGuid}/{gridId}";
+            $"{_serverConfiguration.Host.Scheme}://{_serverConfiguration.Host.Host}:{_serverConfiguration.Host.Port}{_serverConfiguration.PathBase}/api/Image/grid/{mapGuid}/{gridId}";
     }
 }
 

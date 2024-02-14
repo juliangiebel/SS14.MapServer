@@ -1,0 +1,82 @@
+﻿name: Deploy
+
+on:
+  push:
+    branches: [ "master" ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  deploy-sentry:
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 7.x.x
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore -c Release -p:SentryOrg=sentry -p:SentryProject=ss14-map-server -p:SentryUploadSymbols=true -p:SentryUploadSources=true -p:SentryUrl=https://bugs.tanukij.dev
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+
+  deploy-container:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+
+      - name: Docker Login
+        uses: docker/login-action@v2.2.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: get-net-sdk-project-versions-action
+        uses: kzrnm/get-net-sdk-project-versions-action@v1.3.0
+        id: get-version
+        with:
+          proj-path: SS14.MapServer/SS14.MapServer.csproj
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4.6.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{steps.get-version.outputs.version}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4.1.1
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  ci-success:
+    name: Deploy finished
+    needs:
+      - deploy-sentry
+      - deploy-container
+    runs-on: ubuntu-latest
+    steps:
+      - name: CI succeeded
+        run: exit 0

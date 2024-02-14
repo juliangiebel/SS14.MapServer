@@ -1,8 +1,8 @@
-﻿FROM mcr.microsoft.com/dotnet/sdk:7.0 AS base
+﻿FROM mcr.microsoft.com/dotnet/sdk:8.0 AS base
 WORKDIR /app
 EXPOSE 80
 
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 COPY ["SS14.MapServer/SS14.MapServer.csproj", "SS14.MapServer/"]
 RUN dotnet restore "SS14.MapServer/SS14.MapServer.csproj"

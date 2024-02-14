@@ -1,4 +1,6 @@
-﻿using SixLabors.ImageSharp.Advanced;
+﻿using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Advanced;
+using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Formats.Webp;
 using SS14.MapServer.Models.Entities;
 

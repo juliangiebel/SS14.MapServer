@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Text;
+using System.Text.RegularExpressions;
 using Sentry;
 using Serilog;
 using SS14.MapServer.Configuration;
@@ -9,7 +10,7 @@ using ILogger = Serilog.ILogger;
 
 namespace SS14.MapServer.BuildRunners;
 
-public sealed class LocalBuildService
+public sealed partial class LocalBuildService
 {
     private readonly BuildConfiguration _configuration = new();
     private readonly ILogger _log;
@@ -46,9 +47,8 @@ public sealed class LocalBuildService
         var outputDir = Path.Join(directory, _configuration.RelativeOutputPath);
         process.StartInfo.Arguments = "build -c Release";
 
-        using var logStream = new MemoryStream();
-        await using var logWriter = new StreamWriter(logStream);
-        process.OutputDataReceived += (_, args) => LogOutput(args, logWriter);
+        var logBuffer = new StringBuilder();
+        process.OutputDataReceived += (_, args) => LogOutput(logBuffer, args);
 
         _log.Information("Started building {ProjectName}", _configuration.MapRendererProjectName);
 
@@ -65,18 +65,14 @@ public sealed class LocalBuildService
 
         if (process.ExitCode != 0)
         {
-            process.Close();
-            logWriter.Close();
             var exception = new BuildException($"Failed building {_configuration.MapRendererProjectName}");
-            CaptureBuildRunnerException(exception, logStream);
+            ProcessLocalBuildException(logBuffer.ToString(), "build.log", exception);
         }
 
-        process.Close();
-        logWriter.Close();
         _log.Information("Build finished");
     }
 
-    public async Task Run(string directory, string command, List<string> arguments, bool joinExecutablePath = false, CancellationToken cancellationToken = default)
+    public async Task<string> Run(string directory, string command, List<string> arguments, bool joinExecutablePath = false, CancellationToken cancellationToken = default)
     {
         var executablePath = joinExecutablePath ? Path.Join(directory, command) : command;
 
@@ -85,14 +81,12 @@ public sealed class LocalBuildService
         process.StartInfo.WorkingDirectory = directory;
         process.StartInfo.Arguments = string.Join(' ', arguments);
 
-        using var logStream = new MemoryStream();
-        await using var logWriter = new StreamWriter(logStream);
-        process.OutputDataReceived += (_, args) => LogOutput(args, logWriter);
-        process.ErrorDataReceived += (_, args) => LogOutput(args, logWriter);
+        var logBuffer = new StringBuilder();
+        process.OutputDataReceived += (_, args) => LogOutput(logBuffer, args);
+        process.ErrorDataReceived += (_, args) => LogOutput(logBuffer, args);
 
         _log.Information("Running: {Command} {Arguments}", command, string.Join(' ', arguments));
 
-        // ReSharper disable once AccessToDisposedClosure
         await Task.Run(() => process.Start(), cancellationToken).WaitAsync(TimeSpan.FromMinutes(1), cancellationToken);
 
         if (process.HasExited)
@@ -110,17 +104,17 @@ public sealed class LocalBuildService
             throw new BuildException($"Run timed out {_configuration.MapRendererProjectName}");
         }
 
-        if (process.ExitCode == 0)
+        var log = logBuffer.ToString();
+        // Bandaid the fact that the map renderer doesn't return an error code when rendering fails
+
+        if (process.ExitCode != 0 || LogErrorRegex().IsMatch(log))
         {
-            var exception = new BuildException($"Running {command} {string.Join(' ', arguments)} failed");
-            CaptureBuildRunnerException(exception, logStream);
-            process.Close();
-            logWriter.Close();
+            var exception = new BuildException($"Error while running: {command} {string.Join(' ', arguments)}");
+            ProcessLocalBuildException(log, "run.log", exception);
         }
 
-        process.Close();
-        logWriter.Close();
         _log.Information("Run finished");
+        return log;
     }
 
     private void SetUpProcess(Process process, string? executable = "dotnet")
@@ -131,28 +125,29 @@ public sealed class LocalBuildService
         process.StartInfo.FileName = executable;
     }
 
-    private void LogOutput(DataReceivedEventArgs args, TextWriter logWriter)
+    private void LogOutput(StringBuilder logBuffer, DataReceivedEventArgs args)
     {
         if (args.Data == null)
             return;
 
-        logWriter.Write(args.Data);
+        logBuffer.Append($"{args.Data}\n");
         _log.Debug("{Output}", args.Data);
     }
 
-    private void CaptureBuildRunnerException(Exception exception, Stream stream)
+    private void ProcessLocalBuildException(string log, string fileName, Exception exception)
     {
         if (!SentrySdk.IsEnabled)
             throw exception;
 
-        var content = new StreamAttachmentContent(stream);
-        var attachment = new Attachment(AttachmentType.Default, content, "run.log", null);
-        var breadcrumb = new Breadcrumb("Captured run log", "log");
-
-        SentrySdk.CaptureException(exception, scope =>
+        var data = Encoding.UTF8.GetBytes(log);
+        SentrySdk.CaptureException(exception,
+            scope =>
             {
-                scope.AddBreadcrumb(breadcrumb, Hint.WithAttachments(attachment));
-            });
 
+                scope.AddAttachment(data, fileName, AttachmentType.Default, "text/plain");
+            });
     }
+
+    [GeneratedRegex("error?|exception|fatal")]
+    private static partial Regex LogErrorRegex();
 }
