@@ -134,7 +134,7 @@ public class ImageController : ControllerBase
         if (map == null)
             return new NotFoundResult();
 
-        var hash = $@"""{map.MapGuid:N}{map.LastUpdated.GetHashCode():X}""";
+        var hash = $@"""{map.MapGuid:N}{gridId + map.LastUpdated.GetHashCode():X}""";
         if (CheckETags(hash, out var result))
             return result;
 
@@ -142,8 +142,8 @@ public class ImageController : ControllerBase
         if (grid == null)
             return new NotFoundResult();
 
-        if (grid.Tiled)
-            return new BadRequestObjectResult(new ApiErrorMessage($"Grid image with id {gridId} is a tiled image"));
+        //if (grid.Tiled)
+        //    return new BadRequestObjectResult(new ApiErrorMessage($"Grid image with id {gridId} is a tiled image"));
 
         if (!System.IO.File.Exists(grid.Path))
             return new NotFoundResult();

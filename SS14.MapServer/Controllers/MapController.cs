@@ -293,6 +293,9 @@ public class MapController : ControllerBase
                 _serverConfiguration.Host.Scheme,
                 $"{_serverConfiguration.Host.Host}:{_serverConfiguration.Host.Port}{_serverConfiguration.PathBase}"
             );
+
+            if (grid.Tiled)
+                grid.Url = grid.Url?.Replace("Image/grid", "Tile");
         }
         map.Grids.Sort((grid, grid1) => grid1.Extent.CompareTo(grid.Extent));
         return map;

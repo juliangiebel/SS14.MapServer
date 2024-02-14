@@ -1,6 +1,7 @@
 ﻿using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Formats.Webp;
 using SS14.MapServer.Models.Entities;
 
 namespace SS14.MapServer.MapProcessing.Services;
@@ -12,7 +13,7 @@ public sealed class ImageProcessingService
     public async Task<List<Tile>> TileImage(Guid mapGuid, int gridId, string sourcePath, string targetPath, int tileSize)
     {
         if (tileSize < MinTileSize)
-            throw new ArgumentOutOfRangeException($"Provider tile size {tileSize} is smaller than minimum tile size {MinTileSize}");
+            throw new ArgumentOutOfRangeException($"Provided tile size {tileSize} is smaller than minimum tile size {MinTileSize}");
 
         if (!Path.HasExtension(sourcePath))
             throw new Exception($"Invalid image path: {sourcePath}");
@@ -30,17 +31,32 @@ public sealed class ImageProcessingService
         var extension = Path.GetExtension(sourcePath);
         var encoder = image.DetectEncoder(sourcePath);
 
+        var compressedWebpEncoder = new WebpEncoder
+        {
+            Method = WebpEncodingMethod.Level6,
+            FileFormat = WebpFileFormatType.Lossy,
+            Quality = 1,
+            SkipMetadata = true,
+            FilterStrength = 0,
+            TransparentColorMode = WebpTransparentColorMode.Preserve
+        };
+
         for (var y = 0; y < heightSteps; y++)
         {
             for (var x = 0; x < widthSteps; x++)
             {
                 var rectangle = new Rectangle(tileSize * x, tileSize * y, tileSize, tileSize);
                 var tile = image.Clone(img => img.Crop(rectangle));
+                var preview = tile.Clone(img => img.Pixelate(8));
 
                 var path = Path.Combine(targetPath, $"tile_{Guid.NewGuid()}{extension}");
                 await tile.SaveAsync(path, encoder);
 
-                tiles.Add(new Tile(mapGuid, gridId, x, y, tileSize, path));
+                using var stream = new MemoryStream();
+                await preview.SaveAsync(stream, compressedWebpEncoder);
+                var previewData = stream.ToArray();
+
+                tiles.Add(new Tile(mapGuid, gridId, x, y, tileSize, path, previewData));
             }
         }
 

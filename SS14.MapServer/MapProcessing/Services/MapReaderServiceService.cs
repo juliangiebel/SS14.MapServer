@@ -13,6 +13,7 @@ namespace SS14.MapServer.MapProcessing.Services;
 public sealed class MapReaderServiceService : IMapReaderService
 {
     private readonly BuildConfiguration _buildConfiguration = new();
+    private readonly GitConfiguration _gitConfiguration = new();
     private readonly FileUploadService _fileUploadService;
     private readonly Context _context;
 
@@ -22,9 +23,10 @@ public sealed class MapReaderServiceService : IMapReaderService
         _context = context;
 
         configuration.Bind(BuildConfiguration.Name, _buildConfiguration);
+        configuration.Bind(GitConfiguration.Name, _gitConfiguration);
     }
 
-    public async Task<IList<Guid>> UpdateMapsFromFs(string path, string gitRef = "master", bool forceTiled = false, CancellationToken cancellationToken = default)
+    public async Task<IList<Guid>> UpdateMapsFromFs(string path, string gitRef, bool forceTiled = false, CancellationToken cancellationToken = default)
     {
         if (!Directory.Exists(path))
             throw new DirectoryNotFoundException($"Map import path not found: {path}");
@@ -69,6 +71,9 @@ public sealed class MapReaderServiceService : IMapReaderService
             map.Attribution = data.Attribution;
             map.ParallaxLayers = data.ParallaxLayers;
 
+            if (newMap)
+                await _context.Map!.AddAsync(map, cancellationToken);
+
             //Remove previous grids if there are any
             if (map.Grids.Count > 0)
                 _context.RemoveRange(map.Grids);
@@ -93,7 +98,8 @@ public sealed class MapReaderServiceService : IMapReaderService
                     GridId = gridData.GridId,
                     Extent = gridData.Extent,
                     Offset = gridData.Offset,
-                    Tiled = forceTiled || gridData.Tiled,
+                    //Only tile maps used by the viewer and prevent small grids from being tiled
+                    Tiled = forceTiled || gridData.Extent.GetArea() >= 65536 && gitRef == _gitConfiguration.Branch
                 };
                 map.Grids.Add(grid);
                 _context.Add(grid);
@@ -106,16 +112,7 @@ public sealed class MapReaderServiceService : IMapReaderService
                 await stream.DisposeAsync();
             }
 
-            if (newMap)
-            {
-                var id = (await _context.Map.AddAsync(map, cancellationToken)).Entity.MapGuid;
-                ids.Add(id);
-            }
-            else
-            {
-                ids.Add(map.MapGuid);
-            }
-
+            ids.Add(map.MapGuid);
             await _context.SaveChangesAsync(cancellationToken);
         }
 

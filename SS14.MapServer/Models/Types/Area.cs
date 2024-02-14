@@ -23,4 +23,15 @@ public class Area : IComparable<Area>
 
         return area.CompareTo(areaB);
     }
+
+    public Point GetSize()
+    {
+        return A - B;
+    }
+
+    public int GetArea()
+    {
+        var size = GetSize();
+        return (int)Math.Abs(size.X * size.Y);
+    }
 }
