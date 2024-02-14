@@ -26,7 +26,7 @@ public sealed class MapReaderServiceService : IMapReaderService
         configuration.Bind(GitConfiguration.Name, _gitConfiguration);
     }
 
-    public async Task<IList<Guid>> UpdateMapsFromFs(string path, string gitRef, CancellationToken cancellationToken = default)
+    public async Task<IList<Guid>> UpdateMapsFromFs(string path, string gitRef, bool forceTiled = false, CancellationToken cancellationToken = default)
     {
         if (!Directory.Exists(path))
             throw new DirectoryNotFoundException($"Map import path not found: {path}");
@@ -99,7 +99,7 @@ public sealed class MapReaderServiceService : IMapReaderService
                     Extent = gridData.Extent,
                     Offset = gridData.Offset,
                     //Only tile maps used by the viewer and prevent small grids from being tiled
-                    Tiled = gridData.Extent.GetArea() >= 65536 && gitRef == _gitConfiguration.Branch
+                    Tiled = forceTiled || gridData.Extent.GetArea() >= 65536 && gitRef == _gitConfiguration.Branch
                 };
                 map.Grids.Add(grid);
                 _context.Add(grid);

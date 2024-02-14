@@ -197,12 +197,13 @@ public class MapController : ControllerBase
 
     [HttpPost("sync")]
     [Consumes("application/json")]
-    public async Task<IActionResult> SyncMaps(List<string>? mapFileNames, bool syncAll)
+    public async Task<IActionResult> SyncMaps(List<string>? mapFileNames, bool syncAll, bool forceTiled)
     {
         var data = new JobDataMap
         {
             {Jobs.SyncMaps.MapListKey, mapFileNames ?? new List<string>() },
-            {Jobs.SyncMaps.SyncAllKey, syncAll}
+            {Jobs.SyncMaps.SyncAllKey, syncAll},
+            {Jobs.SyncMaps.ForceTiledKey, forceTiled}
         };
 
         await _schedulingService.RunJob<Jobs.SyncMaps>(nameof(Jobs.SyncMaps), "Sync", data);

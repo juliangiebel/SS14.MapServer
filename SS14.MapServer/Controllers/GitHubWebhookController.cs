@@ -99,12 +99,22 @@ public class GitHubWebhookController : ControllerBase
         if (files.Count == 0)
             return;
 
+        // Ensure the the ref will always just be the branch name
+        var bareRef = Path.GetFileName(headCommit.Ref);
+
+        // Prevent PRs from the master branch causing issues
+        if (bareRef == _gitConfiguration.Branch)
+        {
+            await CreateErrorPrComment(
+                payload, payload.PullRequest.Base,
+                $"# ඞ\nThe map server does not work when opening a PR from {_gitConfiguration.Branch}");
+            return;
+        }
+
         await CreateInitialPrComment(payload, payload.PullRequest.Base, files);
 
         var installation = new InstallationIdentifier(payload.Installation.Id, payload.Repository.Id);
 
-        //Ensure the the ref will always just be the branch name
-        var bareRef = Path.GetFileName(headCommit.Ref);
         var processItem = new ProcessItem(
             $"pull/{payload.PullRequest.Number}/head:{bareRef}",
             files!,
@@ -197,6 +207,20 @@ public class GitHubWebhookController : ControllerBase
             new { files = files.ToArray() });
 
         SavePrComment(commentId, issue);
+    }
+
+    private async Task CreateErrorPrComment(PullRequestEventPayload payload, GitReference baseCommit, string message)
+    {
+        var issue = new IssueIdentifier(
+            baseCommit.User.Login,
+            baseCommit.Repository.Name,
+            payload.PullRequest.Number);
+
+        await _githubApiService.CreateCommentWithTemplate(
+            new InstallationIdentifier(payload.Installation.Id, payload.Repository.Id),
+            issue,
+            "map_generation_error",
+            new { error = message });
     }
 
     /// <summary>

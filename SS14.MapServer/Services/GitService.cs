@@ -59,7 +59,7 @@ public sealed class GitService
         if (!Directory.Exists(repoDirectory))
             Clone(repoUrl, repoDirectory, gitRef);
 
-        Pull(repoDirectory, gitRef);
+        FetchAndCheckout(repoDirectory,  repoUrl, gitRef);
 
         return repoDirectory;
     }
@@ -97,9 +97,9 @@ public sealed class GitService
         _log.Information("Done cloning");
     }
 
-    private void Pull(string repoDirectory, string gitRef)
+    private void FetchAndCheckout(string repoDirectory, string repoUrl, string gitRef)
     {
-        _log.Information( "Pulling branch/commit {Ref}...", gitRef);
+        _log.Information( "Retrieving branch/commit {Ref}...", gitRef);
         _log.Debug("Opening repository in: {RepositoryPath}", repoDirectory);
 
         //Set an identity
@@ -114,18 +114,15 @@ public sealed class GitService
         }
 
         _log.Debug("Fetching ref");
-        RunCommand(repoDirectory, "fetch -fu origin", gitRef);
+        RunCommand(repoDirectory, "fetch -fu ", repoUrl, gitRef);
 
         _log.Debug("Checking out {Ref}", StripRef(gitRef));
-        RunCommand(repoDirectory, "checkout  --force", StripRef(gitRef));
-
-        _log.Debug("Pulling latest changes");
-        RunCommand(repoDirectory, "pull origin --ff-only --force", StripRef(gitRef));
+        RunCommand(repoDirectory, "checkout --quiet --force FETCH_HEAD");
 
         _log.Debug("Updating submodules");
         RunCommand(repoDirectory, "submodule update --init --recursive");
 
-        _log.Information("Done pulling");
+        _log.Information("Done retrieving");
     }
 
     private string RunCommand(string directory, params string[] arguments)
