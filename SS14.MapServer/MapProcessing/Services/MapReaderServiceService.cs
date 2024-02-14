@@ -24,7 +24,7 @@ public sealed class MapReaderServiceService : IMapReaderService
         configuration.Bind(BuildConfiguration.Name, _buildConfiguration);
     }
 
-    public async Task<IList<Guid>> UpdateMapsFromFs(string path, string gitRef = "master", CancellationToken cancellationToken = default)
+    public async Task<IList<Guid>> UpdateMapsFromFs(string path, string gitRef = "master", bool forceTiled = false, CancellationToken cancellationToken = default)
     {
         if (!Directory.Exists(path))
             throw new DirectoryNotFoundException($"Map import path not found: {path}");
@@ -93,7 +93,7 @@ public sealed class MapReaderServiceService : IMapReaderService
                     GridId = gridData.GridId,
                     Extent = gridData.Extent,
                     Offset = gridData.Offset,
-                    Tiled = gridData.Tiled,
+                    Tiled = forceTiled || gridData.Tiled,
                 };
                 map.Grids.Add(grid);
                 _context.Add(grid);

@@ -5,4 +5,5 @@ public record ProcessItem(
     IList<string> Maps,
     Action<IServiceProvider, MapProcessResult> OnCompletion,
     string? RepositoryUrl = null,
-    bool SyncAll = false);
+    bool SyncAll = false,
+    bool ForceTiled = false);

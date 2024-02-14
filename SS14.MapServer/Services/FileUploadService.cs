@@ -115,7 +115,10 @@ public sealed class FileUploadService
             {ProcessTiledImage.ProcessOptionsKey, processingOptions}
         };
 
-        await _schedulingService.RunJob<ProcessTiledImage>(nameof(ProcessTiledImage), "Processing", data);
+        await _schedulingService.RunJob<ProcessTiledImage>(
+            $"{nameof(ProcessTiledImage)}-{mapGuid.ToString()}-{gridId}",
+            "Processing",
+            data);
 
         return targetPath;
     }

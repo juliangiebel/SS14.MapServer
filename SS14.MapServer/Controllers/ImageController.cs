@@ -68,9 +68,10 @@ public class ImageController : ControllerBase
         if (image == null)
         {
             image = new ImageFile();
+            image.Path = path;
             _context.Add(image);
         }
-
+        // TODO: Delete previous image file if image already exists in database
         image.Path = path;
 
         await _fileUploadService.UploadImage(image, file, image.InternalPath);

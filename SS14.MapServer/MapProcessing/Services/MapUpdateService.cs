@@ -39,6 +39,7 @@ public sealed class MapUpdateService
     /// <param name="maps">A list of map file names to be generated</param>
     /// <param name="repositoryUrl">The clone url of the repository to clone from</param>
     /// <param name="syncAll">Ignore the maps parameter and update all maps</param>
+    /// <param name="forceTiled">Force the map to be tiled after rendering</param>
     /// <param name="cancellationToken"></param>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
     /// <returns>The commit that was checked out for building and running the map renderer</returns>
@@ -50,6 +51,7 @@ public sealed class MapUpdateService
         IEnumerable<string> maps,
         string? repositoryUrl = null,
         bool syncAll = false,
+        bool forceTiled = false,
         CancellationToken cancellationToken = default)
     {
         var workingDirectory = _gitService.Sync(directory, gitRef, repositoryUrl);
@@ -94,7 +96,7 @@ public sealed class MapUpdateService
             _ => throw new ArgumentOutOfRangeException()
         };
 
-        var mapIds = await _mapReaderService.UpdateMapsFromFs(path,  strippedGitRef, cancellationToken);
+        var mapIds = await _mapReaderService.UpdateMapsFromFs(path,  strippedGitRef, forceTiled, cancellationToken);
         return new MapProcessResult(strippedGitRef, mapIds);
     }
 }

@@ -12,6 +12,7 @@ public class SyncMaps : IJob
 {
     public const string MapListKey = "Maps";
     public const string SyncAllKey = "SyncAll";
+    public const string ForceTiledKey = "ForceTiled";
     public const string GitRefKey = "GitRef";
 
     private readonly ProcessQueue _processQueue;
@@ -19,6 +20,7 @@ public class SyncMaps : IJob
     public List<string>? Maps { get; set; }
     public string GitRef { get; set; } = "master";
     public bool SyncAll { get; set; } = false;
+    public bool ForceTiled { get; set; } = false;
 
     public SyncMaps(ProcessQueue processQueue)
     {
@@ -34,7 +36,8 @@ public class SyncMaps : IJob
             GitRef,
             Maps!,
             LogCompletion,
-            SyncAll: SyncAll);
+            SyncAll: SyncAll,
+            ForceTiled: ForceTiled);
 
         if (!await _processQueue.TryQueueProcessItem(processItem))
             throw new JobExecutionException("Failed to start map sync process. Process queue is full.");
