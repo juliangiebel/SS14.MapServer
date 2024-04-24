@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Configuration Reference" id="Configuration-Reference">
+
+    <section-starting-page>
+        <title>Configuration Reference</title>
+        <description>a</description>
+        <spotlight>
+            <a href="Github-Configuration.md" type="branch"/>
+            <a href="Server-Configuration.md" type="server"/>
+        </spotlight>
+        <primary>
+            <title>Configuration Sections</title>
+            <a href="Build-Configuration.md"/>
+            <a href="Container-Configuration.md"/>
+            <a href="File-Paths-Configuration.md"/>
+            <a href="Git-Configuration.md"/>
+            <a href="Github-Configuration.md"/>
+            <a href="Processing-Configuration.md"/>
+            <a href="Server-Configuration.md"/>
+        </primary>
+        <secondary>
+            <title>Configuration Examples</title>
+            <a href="Basic-Example-Configuration.md" summary="An example configuration you can copy and adapt"/>
+        </secondary>
+    </section-starting-page>
+</topic>
