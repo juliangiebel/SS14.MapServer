@@ -44,7 +44,8 @@ There is a docker image provided for %project-name%:
 # Example docker compose file
 version: '3.3'
 services:
-  # The ss14 map server container doesn't support https on its own. Please use a reverse proxy
+  # The ss14 map server container doesn't support https on its own. 
+  # Please use a reverse proxy
   ss14mapserver:
     image: ghcr.io/juliangiebel/ss14.mapserver:latest
     volumes:
@@ -54,7 +55,8 @@ services:
       - ./build:/app/build
     ports:
       - 5218:80 # Replace 5218 with the port you need
-    # Disables core dumps to prevent maprenderer crashes from filling up your hard drive with over a gigabyte per dump
+    # Disables core dumps to prevent map renderer crashes from filling
+    # up your hard drive with over a gigabyte per dump
     ulimits:
       core:
         hard: 0
@@ -62,7 +64,8 @@ services:
   map_database:
     image: postgres:latest
     environment:
-      - POSTGRES_PASSWORD=postgres # Replace postgres with a randomly generated password
+      # Replace postgres with a randomly generated password
+      - POSTGRES_PASSWORD=postgres
     volumes:
       - ./data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql

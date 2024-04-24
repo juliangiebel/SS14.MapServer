@@ -1,6 +1,6 @@
 # Git Configuration
 
-This section contains all of the settings related to working with the content git repository.
+This section contains all the settings related to working with the content git repository.
 
 > Be carefull when changing configuration settings in this section as some are relevant for the servers security
 {style="note"}
@@ -10,10 +10,10 @@ yaml:
   [[[RepositoryUrl|#repositoryurl]]]: <string>
   [[[Branch|#branch]]]: <string>
   [[[RetrieveMapFilesFromDiff|#retrievemapfilesfromdiff]]]: [true|false]
-  [[[MapFilePatterns|#mapfilepatterns]]]: <string>[]
-  [[[MapFileExcludePatterns|#mapfileexcludepatterns]]]: <string>[]
+  [[[MapFilePatterns|#mapfilepatterns]]]: <string[]>
+  [[[MapFileExcludePatterns|#mapfileexcludepatterns]]]: <string[]>
   [[[DontRunWithCodeChanges|#dontrunwithcodechanges]]]: [true|false]
-  [[[CodeChangePatterns|#codechangepatterns]]]: <string>[]
+  [[[CodeChangePatterns|#codechangepatterns]]]: <string[]>
   [[[RunOnPullRequests|#runonpullrequests]]]: [true|false]
   [[[Identity|#identity]]]:
     Name: <string>
@@ -45,12 +45,12 @@ If this is false all maps will get updated on every push.
 > {style="note"}
 
 ### MapFilePatterns
-`<string>[] default="master"`
+`<string[]> default="master"`
 
 Glob patterns of map files to check for.
 
 ### MapFileExcludePatterns
-`<string>[]`
+`<string[]>`
 
 Glob patterns for excluding specific map files.
 
@@ -69,7 +69,7 @@ Prevent updating maps when there where any c# files changed.
 > {style="warning"}
 
 ### CodeChangePatterns
-`<string>[] default=["**/*.cs"]`
+`<string[]> default=["**/*.cs"]`
 
 Glob patterns used for detecting code changed.
 
