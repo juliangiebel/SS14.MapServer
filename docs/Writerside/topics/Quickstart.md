@@ -86,6 +86,13 @@ The official map renderer instance is using [Caddy](https://caddyserver.com/)
 
 ### Example Caddy configuration
 ````
+(cors) {
+        @origin{args.0} header Origin {args.0}
+        header @origin{args.0} Access-Control-Allow-Origin "{args.0}"
+        header @origin{args.0} Access-Control-Allow-Headers "content-type, x-requested-with"
+        header @origin{args.0} Vary Origin
+}
+
 mapserver.tanukij.dev {
   encode zstd gzip
   reverse_proxy 127.0.0.1:8956
