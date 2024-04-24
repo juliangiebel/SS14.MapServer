@@ -71,6 +71,10 @@ services:
 
 ## Setup - Manual
 
+> Don't set %project-name% up without docker while using local mode and having automated builds enabled.  
+> You run the risk of malicious code making its way into the content repo and being executed on the host machine.
+{style="warning"}
+
 *Todo: setup guide for running the map server without docker*
 
 ## Reverse proxy
@@ -89,3 +93,4 @@ mapserver.tanukij.dev {
 
 
 ## Configuration
+

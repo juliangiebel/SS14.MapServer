@@ -6,12 +6,4 @@
         <accepts>page.html</accepts>
     </rule>
     -->
-    <rule id="4ba0aa8">
-        <description>Created after removal of "Quickstart" from Help Instance</description>
-        <accepts>Quickstart.html</accepts>
-    </rule>
-    <rule id="e330eb6">
-        <description>Created after removal of "Quickstart" from Help Instance</description>
-        <accepts>Quickstart.html</accepts>
-    </rule>
 </rules>

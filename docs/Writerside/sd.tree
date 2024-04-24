@@ -6,6 +6,15 @@
                   start-page="Quickstart.md">
 
     <toc-element topic="Quickstart.md"/>
-    <toc-element topic="Configuration-Reference.md"/>
+    <toc-element topic="Configuration-Reference.topic">
+        <toc-element topic="Build-Configuration.md"/>
+        <toc-element topic="Container-Configuration.md"/>
+        <toc-element topic="File-Paths-Configuration.md"/>
+        <toc-element topic="Git-Configuration.md"/>
+        <toc-element topic="Github-Configuration.md"/>
+        <toc-element topic="Processing-Configuration.md"/>
+        <toc-element topic="Server-Configuration.md"/>
+        <toc-element topic="Basic-Example-Configuration.md"/>
+    </toc-element>
     <toc-element topic="API_Reference.md"/>
 </instance-profile>
