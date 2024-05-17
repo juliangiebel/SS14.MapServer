@@ -1,6 +1,8 @@
 ﻿using System.Collections.Immutable;
 using Microsoft.Extensions.FileSystemGlobbing;
-using SS14.MapServer.BuildRunners;
+using SS14.BuildRunner.BuildRunners;
+using SS14.BuildRunner.Configuration;
+using SS14.BuildRunner.Services;
 using SS14.MapServer.Configuration;
 using SS14.MapServer.Services;
 using SS14.MapServer.Services.Interfaces;

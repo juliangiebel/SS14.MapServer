@@ -24,8 +24,5 @@ public class ProcessingConfiguration
     /// <summary>
     /// Glob patterns for files that should be deleted from build directories when getting cleaned
     /// </summary>
-    public List<string> JunkFilePatterns { get; set; } = new()
-    {
-        "core.*"
-    };
+    public List<string> JunkFilePatterns { get; set; } = ["core.*"];
 }
