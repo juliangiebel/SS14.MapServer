@@ -6,7 +6,7 @@ namespace SS14.MapServer.Tests;
 
 public class ImageProcessingServiceTests
 {
-    private const string ResourcePath = "resources/tiling_test_source.png";
+    private const string ResourcePath = "resources/saltern.webp";
     private const string OutputPath = "test";
 
     private ImageProcessingService? _processingService;
@@ -33,11 +33,11 @@ public class ImageProcessingServiceTests
     [Test]
     public async Task ImageTilingTest()
     {
-        var tiles = await _processingService!.TileImage(Guid.NewGuid(), 0, _sourcePath!, _targetPath!, 512);
+        var tiles = await _processingService!.TileImage(Guid.NewGuid(), 0, _sourcePath!, _targetPath!, 256);
 
         Assert.Multiple(() =>
         {
-            Assert.That(tiles, Has.Count.EqualTo(60));
+            Assert.That(tiles, Has.Count.EqualTo(198));
             Assert.That(File.Exists(tiles[0].Path), Is.True);
         });
     }
