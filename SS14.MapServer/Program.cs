@@ -128,6 +128,8 @@ builder.Services.AddQuartzServer(q => { q.WaitForJobsToComplete = true; });
 builder.Host.UseSerilog((ctx, cfg) => cfg.ReadFrom.Configuration(ctx.Configuration));
 builder.Logging.AddSerilog();
 
+builder.Host.UseSystemd();
+
 if (serverConfiguration.EnableSentry)
     builder.WebHost.UseSentry();
 
