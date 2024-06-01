@@ -24,8 +24,8 @@ public sealed class ImageProcessingService
         using var image = await Image.LoadAsync(file);
 
         var bounds = image.Bounds;
-        var heightSteps = bounds.Height / tileSize;
-        var widthSteps = bounds.Width / tileSize;
+        var heightSteps = Math.Ceiling((double)bounds.Height / tileSize);
+        var widthSteps = Math.Ceiling((double)bounds.Width / tileSize);
 
         var tiles = new List<Tile>();
         var extension = Path.GetExtension(sourcePath);
@@ -46,6 +46,8 @@ public sealed class ImageProcessingService
             for (var x = 0; x < widthSteps; x++)
             {
                 var rectangle = new Rectangle(tileSize * x, tileSize * y, tileSize, tileSize);
+                rectangle.Intersect(bounds);
+
                 var tile = image.Clone(img => img.Crop(rectangle));
                 var preview = tile.Clone(img => img.Pixelate(8));
 
