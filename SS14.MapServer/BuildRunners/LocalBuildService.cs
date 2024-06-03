@@ -53,13 +53,17 @@ public sealed partial class LocalBuildService
         _log.Information("Started building {ProjectName}", _configuration.MapRendererProjectName);
 
         process.Start();
-        process.BeginOutputReadLine();
-        await process.WaitForExitAsync(cancellationToken).WaitAsync(TimeSpan.FromMinutes(_configuration.ProcessTimeoutMinutes), cancellationToken);
-        process.CancelOutputRead();
 
-        if (!process.HasExited)
+        try
         {
-            process.Kill();
+            process.BeginOutputReadLine();
+            await process.WaitForExitAsync(cancellationToken).WaitAsync(TimeSpan.FromMinutes(_configuration.ProcessTimeoutMinutes), cancellationToken);
+            process.CancelOutputRead();
+        }
+        catch (OperationCanceledException)
+        {
+            if (!process.HasExited)
+                process.Kill();
             throw new BuildException($"Building timed out {_configuration.MapRendererProjectName}");
         }
 
@@ -87,20 +91,25 @@ public sealed partial class LocalBuildService
 
         _log.Information("Running: {Command} {Arguments}", command, string.Join(' ', arguments));
 
-        await Task.Run(() => process.Start(), cancellationToken).WaitAsync(TimeSpan.FromMinutes(1), cancellationToken);
+        process.Start();
 
         if (process.HasExited)
             throw new BuildException($"Run timed out {_configuration.MapRendererProjectName}");
 
-        process.BeginErrorReadLine();
-        process.BeginOutputReadLine();
-        await process.WaitForExitAsync(cancellationToken).WaitAsync(TimeSpan.FromMinutes(_configuration.ProcessTimeoutMinutes), cancellationToken);
-        process.CancelErrorRead();
-        process.CancelOutputRead();
-
-        if (!process.HasExited)
+        try
         {
-            process.Kill();
+            process.BeginErrorReadLine();
+            process.BeginOutputReadLine();
+            await process.WaitForExitAsync(cancellationToken)
+                .WaitAsync(TimeSpan.FromMinutes(_configuration.ProcessTimeoutMinutes), cancellationToken);
+            process.CancelErrorRead();
+            process.CancelOutputRead();
+        }
+        catch (OperationCanceledException)
+        {
+            if (!process.HasExited)
+                process.Kill();
+
             throw new BuildException($"Run timed out {_configuration.MapRendererProjectName}");
         }
 
