@@ -11,7 +11,7 @@ public class PullRequestComment
     [Required]
     public string Repository { get; set; } = default!;
     [Required]
-    public int IssueNumber { get; set; }
+    public long IssueNumber { get; set; }
     [Required]
-    public int CommentId { get; set; }
+    public long CommentId { get; set; }
 }

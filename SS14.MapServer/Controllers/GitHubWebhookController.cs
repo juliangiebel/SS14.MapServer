@@ -281,7 +281,7 @@ public class GitHubWebhookController : ControllerBase
         }
     }
 
-    private void SavePrComment(int? commentId, IssueIdentifier issue)
+    private void SavePrComment(long? commentId, IssueIdentifier issue)
     {
         if (!commentId.HasValue)
             return;
