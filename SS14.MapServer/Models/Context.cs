@@ -10,7 +10,7 @@ public class Context : DbContext
     public DbSet<ImageFile>? Image { get; set; }
     public DbSet<Grid>? Grid { get; set; }
 
-    public DbSet<PullRequestComment>? PullRequestComment { get; set; }
+    public DbSet<PullRequestComment> PullRequestComment { get; set; } = default!;
 
     public Context(DbContextOptions<Context> options) : base(options) {}
 
