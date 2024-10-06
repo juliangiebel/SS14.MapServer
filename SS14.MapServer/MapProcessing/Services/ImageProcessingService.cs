@@ -24,8 +24,8 @@ public sealed class ImageProcessingService
         using var image = await Image.LoadAsync(file);
 
         var bounds = image.Bounds;
-        var heightSteps = Math.Ceiling((double)bounds.Height / tileSize);
-        var widthSteps = Math.Ceiling((double)bounds.Width / tileSize);
+        var heightSteps = Math.Ceiling((double) bounds.Height / tileSize);
+        var widthSteps = Math.Ceiling((double) bounds.Width / tileSize);
 
         var tiles = new List<Tile>();
         var extension = Path.GetExtension(sourcePath);
@@ -49,6 +49,16 @@ public sealed class ImageProcessingService
                 rectangle.Intersect(bounds);
 
                 var tile = image.Clone(img => img.Crop(rectangle));
+                // Make sure to pad the edge tiles to full size
+                if (x == widthSteps - 1 || y == heightSteps - 1)
+                    tile.Mutate(img => img.Resize(new ResizeOptions
+                    {
+                        Size = new Size(tileSize, tileSize),
+                        Mode = ResizeMode.Pad,
+                        Sampler = KnownResamplers.NearestNeighbor,
+                        PadColor = default,
+                        Position = AnchorPositionMode.TopLeft
+                    }));
                 var preview = tile.Clone(img => img.Pixelate(8));
 
                 var path = Path.Combine(targetPath, $"tile_{Guid.NewGuid()}{extension}");

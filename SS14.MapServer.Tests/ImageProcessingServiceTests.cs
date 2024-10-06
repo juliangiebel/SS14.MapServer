@@ -1,3 +1,4 @@
+using SixLabors.ImageSharp;
 using SS14.MapServer.Helpers;
 using SS14.MapServer.MapProcessing.Services;
 using SS14.MapServer.Services;
@@ -39,6 +40,9 @@ public class ImageProcessingServiceTests
         {
             Assert.That(tiles, Has.Count.EqualTo(198));
             Assert.That(File.Exists(tiles[0].Path), Is.True);
+            // Also check that the edge tiles are properly sized
+            Assert.That(Image.Load(tiles.First(t => t.Y == 10).Path).Height, Is.EqualTo(256));
+            Assert.That(Image.Load(tiles.First(t => t.X == 17).Path).Width, Is.EqualTo(256));
         });
     }
 }
